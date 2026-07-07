@@ -1,0 +1,3530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Money — Your Simple Finance Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============ Design tokens — "Money Jar" theme ============
+   A tactile, ledger-and-coin-jar identity for everyday people, not a
+   generic fintech dashboard: warm stone paper, moss-green growth,
+   wine-red spending, honey-gold highlights. Fraunces (soft serif) for
+   big numbers, Space Grotesk for UI text, Space Mono for tabular figures. */
+:root{
+  --bg: #EEF0E6;
+  --surface: #FBFAF3;
+  --surface-glass: rgba(251,250,243,0.72);
+  --ink: #202B22;
+  --muted: #6C7566;
+  --line: #DBDACB;
+  --accent: #4C7A5A;
+  --accent-ink: #223A2A;
+  --accent-soft: #DEE9DD;
+  --coral: #8C3B4A;
+  --coral-soft: #F3DFDF;
+  --gold: #D6A23C;
+  --gold-soft: #F6E7C8;
+  --info: #3E7C74;
+  --info-soft: #DCEBE7;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --shadow: 0 10px 28px rgba(32,43,34,0.08), 0 3px 8px rgba(32,43,34,0.05);
+  --shadow-lift: 0 18px 44px rgba(32,43,34,0.16);
+  --dur: 220ms;
+  --ease: cubic-bezier(.4,0,.2,1);
+  --font-display: 'Fraunces', 'Georgia', serif;
+  --font-body: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+}
+
+[data-theme="dark"]{
+  --bg: #141B15;
+  --surface: #1C251D;
+  --surface-glass: rgba(28,37,29,0.72);
+  --ink: #EAF0E6;
+  --muted: #96A38F;
+  --line: #2C372C;
+  --accent: #74AE87;
+  --accent-ink: #E7F4EA;
+  --accent-soft: #223B2B;
+  --coral: #D98A93;
+  --coral-soft: #3B2224;
+  --gold: #E8BE6E;
+  --gold-soft: #3A2F17;
+  --info: #7FBDB2;
+  --info-soft: #1F3833;
+  --shadow: 0 10px 28px rgba(0,0,0,0.35), 0 3px 8px rgba(0,0,0,0.25);
+  --shadow-lift: 0 18px 44px rgba(0,0,0,0.45);
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+h1,h2,h3,h4{ font-family:var(--font-display); margin:0; letter-spacing:-0.01em; }
+button, input, select{ font-family:inherit; }
+.mono{ font-family:var(--font-mono); font-variant-numeric: tabular-nums; }
+a{ color:inherit; }
+::selection{ background:var(--accent); color:#fff; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; transition:none !important; }
+}
+
+/* ============ Utility ============ */
+.hidden{ display:none !important; }
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 18px; border-radius:999px; border:none;
+  font-size:14px; font-weight:600; cursor:pointer;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), background var(--dur) var(--ease);
+  background:var(--surface); color:var(--ink); border:1px solid var(--line);
+}
+.btn:hover{ transform:translateY(-1px); box-shadow:var(--shadow); }
+.btn:active{ transform:translateY(0); }
+.btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.btn-primary{ background:var(--accent); color:#fff; border:none; }
+.btn-primary:hover{ box-shadow:0 10px 24px rgba(76,122,90,0.35); }
+.btn-danger{ background:var(--coral-soft); color:var(--coral); border:none; }
+.btn-ghost{ background:transparent; border:1px solid transparent; }
+.btn-ghost:hover{ background:var(--surface); box-shadow:none; }
+.btn-sm{ padding:6px 12px; font-size:13px; }
+.btn-icon{ width:38px; height:38px; padding:0; border-radius:12px; justify-content:center; }
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+
+.field{ display:flex; flex-direction:column; gap:6px; }
+.field label{ font-size:13px; font-weight:600; color:var(--muted); }
+.field input, .field select, .field textarea{
+  padding:11px 14px; border-radius:var(--radius-sm); border:1px solid var(--line);
+  background:var(--bg); color:var(--ink); font-size:14px;
+  transition: border-color var(--dur) var(--ease);
+}
+.field input:focus, .field select:focus, .field textarea:focus{
+  outline:none; border-color:var(--accent);
+}
+.pill{ display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+.pill-income{ background:var(--accent-soft); color:var(--accent-ink); }
+.pill-expense{ background:var(--coral-soft); color:var(--coral); }
+
+/* ============ Auth screen ============ */
+#auth-screen{
+  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  background:
+    radial-gradient(circle at 15% 15%, var(--accent-soft), transparent 45%),
+    radial-gradient(circle at 85% 85%, var(--coral-soft), transparent 45%),
+    var(--bg);
+}
+.auth-box{ width:100%; max-width:400px; padding:36px 32px; text-align:center; }
+.auth-logo{
+  width:58px; height:58px; border-radius:18px; margin:0 auto 18px;
+  background:linear-gradient(135deg, var(--accent-ink), var(--accent));
+  display:flex; align-items:center; justify-content:center; font-size:26px; color:#fff;
+  box-shadow:0 10px 24px rgba(76,122,90,0.35);
+}
+.auth-box h1{ font-size:22px; margin-bottom:4px; }
+.auth-box p.sub{ color:var(--muted); font-size:14px; margin-bottom:24px; }
+.auth-tabs{ display:flex; background:var(--bg); border-radius:999px; padding:4px; margin-bottom:22px; }
+.auth-tabs button{
+  flex:1; border:none; background:transparent; padding:9px; border-radius:999px; font-weight:700;
+  font-size:13px; color:var(--muted); cursor:pointer; transition:all var(--dur) var(--ease);
+}
+.auth-tabs button.active{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow); }
+.auth-form{ display:flex; flex-direction:column; gap:14px; text-align:left; }
+.auth-error{ color:var(--coral); font-size:13px; min-height:16px; text-align:left; }
+.auth-box .btn-primary{ width:100%; justify-content:center; padding:12px; margin-top:4px; }
+
+/* ============ App shell ============ */
+#app-shell{ display:flex; min-height:100vh; }
+
+.sidebar{
+  width:230px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--line);
+  display:flex; flex-direction:column; padding:20px 14px; position:sticky; top:0; height:100vh;
+}
+.sidebar-logo{ display:flex; align-items:center; gap:10px; padding:6px 10px 22px; }
+.sidebar-logo .mark{ width:32px; height:32px; border-radius:10px; background:linear-gradient(135deg, var(--accent-ink), var(--accent)); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-family:var(--font-display); }
+.sidebar-logo span{ font-family:var(--font-display); font-weight:800; font-size:16px; }
+.nav-item{
+  display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px;
+  color:var(--muted); font-weight:600; font-size:14px; cursor:pointer; margin-bottom:2px;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  border:none; background:transparent; width:100%; text-align:left;
+}
+.nav-item:hover{ background:var(--bg); color:var(--ink); }
+.nav-item.active{ background:var(--accent-soft); color:var(--accent-ink); }
+.nav-item .ic{ font-size:17px; width:20px; text-align:center; }
+.sidebar-footer{ margin-top:auto; display:flex; flex-direction:column; gap:6px; }
+.user-chip{ display:flex; align-items:center; gap:10px; padding:10px; border-radius:12px; background:var(--bg); }
+.user-chip .av{ width:32px; height:32px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
+.user-chip .name{ font-size:13px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.main-area{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.topbar{
+  display:flex; align-items:center; gap:14px; padding:18px 28px; position:sticky; top:0;
+  background:var(--surface-glass); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); z-index:5;
+}
+.topbar h2{ font-size:20px; flex-shrink:0; }
+.search-box{ flex:1; max-width:360px; position:relative; }
+.search-box input{ width:100%; padding:9px 14px 9px 36px; border-radius:999px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font-size:13px; }
+.search-box input:focus{ outline:none; border-color:var(--accent); }
+.search-box .ic{ position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.5; font-size:13px; }
+.topbar-actions{ margin-left:auto; display:flex; align-items:center; gap:10px; }
+
+.view{ padding:24px 28px 100px; animation: fadein var(--dur) var(--ease); }
+@keyframes fadein{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+
+/* ============ Dashboard ============ */
+.hero-money{
+  padding:26px 30px; display:flex; align-items:center; justify-content:space-between; gap:24px;
+  background:linear-gradient(135deg, var(--accent-ink) 0%, var(--accent) 100%);
+  color:#fff; margin-bottom:20px; position:relative; overflow:hidden;
+}
+.hero-money::after{
+  content:''; position:absolute; right:-70px; top:-70px; width:240px; height:240px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%);
+}
+.hero-money .label{ font-size:12.5px; opacity:.8; font-weight:600; text-transform:uppercase; letter-spacing:.08em; font-family:var(--font-body); }
+.hero-money .amount{ font-size:40px; font-weight:600; font-family:var(--font-display); margin-top:4px; font-variant-numeric:tabular-nums; }
+
+/* Signature element: a coin jar that fills up according to how much of your
+   income you've kept this cycle — a literal, friendly stand-in for "savings". */
+.jar-wrap{ position:relative; width:104px; height:128px; flex-shrink:0; z-index:1; }
+.jar-svg .jar-outline{ fill:none; stroke:rgba(255,255,255,0.55); stroke-width:2.5; }
+.jar-svg .jar-lid{ fill:rgba(255,255,255,0.28); }
+.jar-svg .jar-liquid{ fill:var(--gold); transition:y 500ms var(--ease), height 500ms var(--ease); }
+.jar-svg .jar-wave{ fill:rgba(255,255,255,0.55); }
+.jar-caption{ text-align:center; margin-top:4px; font-size:11.5px; font-weight:600; opacity:.85; }
+.jar-caption strong{ font-family:var(--font-display); font-size:14px; font-weight:600; display:block; }
+
+.stat-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:16px; margin-bottom:20px; }
+.stat-card{ padding:18px; }
+.stat-card .top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.stat-card .ic{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.stat-card .val{ font-size:22px; font-weight:800; font-family:var(--font-display); }
+.stat-card .lbl{ font-size:12.5px; color:var(--muted); font-weight:600; }
+
+.chart-grid{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; margin-bottom:20px; }
+.chart-card{ padding:18px; }
+.chart-card h3{ font-size:14px; margin-bottom:12px; }
+.chart-card canvas{ max-height:230px; }
+@media (max-width: 900px){ .chart-grid{ grid-template-columns:1fr; } }
+
+.list-card{ padding:6px 0; }
+.list-card .list-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 18px; }
+.list-card .list-head h3{ font-size:15px; }
+
+.tx-row{ display:flex; align-items:center; gap:12px; padding:12px 18px; border-top:1px solid var(--line); transition: background var(--dur); }
+.tx-row:hover{ background:var(--bg); }
+.tx-row .ic{ width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+.tx-row .info{ flex:1; min-width:0; }
+.tx-row .info .desc{ font-weight:700; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tx-row .info .meta{ font-size:12px; color:var(--muted); margin-top:2px; }
+.tx-row .amt{ font-weight:800; font-size:14px; flex-shrink:0; }
+.tx-row .amt.pos{ color:var(--accent); }
+.tx-row .amt.neg{ color:var(--coral); }
+.tx-row .row-actions{ display:flex; gap:4px; opacity:0; transition:opacity var(--dur); }
+.tx-row:hover .row-actions{ opacity:1; }
+.tx-row .attach-badge{ font-size:11px; color:var(--muted); margin-left:4px; }
+
+.empty-state{ text-align:center; padding:50px 20px; color:var(--muted); }
+.empty-state .big{ font-size:34px; margin-bottom:10px; }
+.empty-state p{ font-size:13.5px; }
+
+/* ============ Filter bar ============ */
+.filter-bar{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; align-items:end; }
+.filter-bar .field{ min-width:150px; }
+
+/* ============ Groups grid ============ */
+.groups-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:14px; }
+.group-tile{ padding:16px; display:flex; flex-direction:column; gap:8px; position:relative; }
+.group-tile .ic{ width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+.group-tile .name{ font-weight:700; font-size:14px; }
+.group-tile .spend{ font-size:12px; color:var(--muted); }
+.group-tile .tile-actions{ position:absolute; top:10px; right:10px; display:flex; gap:4px; opacity:0; transition:opacity var(--dur); }
+.group-tile:hover .tile-actions{ opacity:1; }
+
+/* ============ Budgets ============ */
+.budget-row{ padding:16px 18px; border-top:1px solid var(--line); }
+.budget-row:first-child{ border-top:none; }
+.budget-row .top{ display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; margin-bottom:8px; }
+.budget-row .bar{ height:8px; border-radius:999px; background:var(--bg); overflow:hidden; }
+.budget-row .bar .fill{ height:100%; border-radius:999px; background:var(--accent); transition:width var(--dur) var(--ease); }
+.budget-row .bar .fill.over{ background:var(--coral); }
+.budget-row .sub{ font-size:12px; color:var(--muted); margin-top:6px; }
+
+/* ============ Currency table ============ */
+.settings-section{ margin-bottom:24px; padding:20px; }
+.settings-section h3{ font-size:15px; margin-bottom:14px; }
+.cur-row{ display:grid; grid-template-columns:56px 1fr 90px 100px 40px; gap:10px; align-items:center; padding:8px 0; font-size:13.5px; }
+.cur-row.head{ color:var(--muted); font-weight:700; font-size:12px; }
+.theme-toggle{ display:flex; align-items:center; gap:10px; }
+.switch{ width:44px; height:24px; border-radius:999px; background:var(--line); position:relative; cursor:pointer; border:none; flex-shrink:0; }
+.switch::after{ content:''; position:absolute; width:18px; height:18px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform var(--dur) var(--ease); box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.switch.on{ background:var(--accent); }
+.switch.on::after{ transform:translateX(20px); }
+
+/* ============ Modal ============ */
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(6,15,12,0.45); backdrop-filter:blur(2px);
+  display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;
+  animation: fadein var(--dur) var(--ease);
+}
+.modal{ width:100%; max-width:460px; padding:26px; max-height:88vh; overflow-y:auto; }
+.modal h3{ font-size:18px; margin-bottom:18px; }
+.modal .form-grid{ display:flex; flex-direction:column; gap:14px; }
+.modal .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:22px; }
+.type-toggle{ display:flex; background:var(--bg); border-radius:12px; padding:4px; }
+.type-toggle button{ flex:1; padding:9px; border-radius:9px; border:none; background:transparent; font-weight:700; font-size:13px; cursor:pointer; color:var(--muted); }
+.type-toggle button.active-income{ background:var(--accent); color:#fff; }
+.type-toggle button.active-expense{ background:var(--coral); color:#fff; }
+
+.type-toggle button.active-transfer{ background:var(--info); color:#fff; }
+.attach-drop{ border:1.5px dashed var(--line); border-radius:var(--radius-sm); padding:16px; text-align:center; font-size:13px; color:var(--muted); cursor:pointer; }
+.attach-drop:hover{ border-color:var(--accent); color:var(--accent); }
+.attach-list{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.attach-chip{ display:flex; align-items:center; gap:6px; padding:6px 10px; background:var(--bg); border-radius:999px; font-size:12px; }
+.attach-chip button{ border:none; background:none; cursor:pointer; color:var(--coral); font-weight:700; }
+
+/* ============ Toast ============ */
+#toast{
+  position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); opacity:0;
+  background:var(--ink); color:var(--bg); padding:12px 20px; border-radius:999px; font-size:13.5px; font-weight:600;
+  z-index:100; transition:all var(--dur) var(--ease); pointer-events:none; box-shadow:var(--shadow-lift);
+}
+#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ============ Floating add + mobile bottom nav ============ */
+.fab{
+  position:fixed; bottom:26px; right:26px; width:58px; height:58px; border-radius:50%;
+  background:var(--accent); color:#fff; font-size:26px; border:none; box-shadow:var(--shadow-lift);
+  cursor:pointer; display:none; align-items:center; justify-content:center; z-index:20;
+  transition:transform var(--dur) var(--ease);
+}
+.fab:active{ transform:scale(.92); }
+
+.bottom-nav{ display:none; }
+
+@media (max-width: 860px){
+  .sidebar{ display:none; }
+  .fab{ display:flex; }
+  .bottom-nav{
+    display:flex; position:fixed; bottom:0; left:0; right:0; background:var(--surface-glass); backdrop-filter:blur(10px);
+    border-top:1px solid var(--line); z-index:15; padding:8px 6px calc(env(safe-area-inset-bottom) + 6px);
+  }
+  .bottom-nav button{
+    flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:2px;
+    font-size:10.5px; font-weight:700; color:var(--muted); padding:6px 2px; cursor:pointer;
+  }
+  .bottom-nav button.active{ color:var(--accent); }
+  .bottom-nav .ic{ font-size:19px; }
+  .view{ padding:18px 16px 110px; }
+  .topbar{ padding:14px 16px; }
+  .topbar h2{ font-size:17px; }
+  .search-box{ display:none; }
+  .chart-grid{ grid-template-columns:1fr; }
+  .hero-money{ flex-direction:column; text-align:center; }
+  .modal{ max-width:100%; }
+}
+
+.kbd-hint{ font-size:11px; color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:2px 6px; font-family:var(--font-mono); }
+
+</style>
+</head>
+<body>
+
+<!-- ===================== AUTH SCREEN ===================== -->
+<div id="auth-screen">
+  <div class="auth-box card">
+    <div class="auth-logo">🪙</div>
+    <h1>Money</h1>
+    <p class="sub">Your money, in a jar you can see.</p>
+
+    <div class="auth-tabs">
+      <button class="active" data-tab="login">Log In</button>
+      <button data-tab="signup">Create New User</button>
+    </div>
+
+    <form id="login-form" class="auth-form">
+      <div class="field">
+        <label for="login-username">Username</label>
+        <input type="text" id="login-username" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Log In</button>
+    </form>
+
+    <form id="signup-form" class="auth-form hidden">
+      <div class="field">
+        <label for="signup-username">Choose a Username</label>
+        <input type="text" id="signup-username" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="signup-password">Choose a Password</label>
+        <input type="password" id="signup-password" autocomplete="new-password" required>
+      </div>
+      <div class="field">
+        <label for="signup-password2">Confirm Password</label>
+        <input type="password" id="signup-password2" autocomplete="new-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Create Account</button>
+    </form>
+
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="app-shell" class="hidden">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="mark">M</div><span>Money</span></div>
+    <nav id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <div class="user-chip" id="sidebar-user-chip"><div class="av"></div><div class="name"></div></div>
+      <button class="btn btn-ghost btn-sm" id="btn-logout">🚪 Log Out</button>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <h2 id="topbar-title">Home</h2>
+      <div class="search-box">
+        <span class="ic">🔍</span>
+        <input type="text" id="global-search" placeholder="Search... (press /)">
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" id="btn-logout-topbar">🚪 Log Out</button>
+        <button class="switch" id="theme-switch" title="Dark Mode"></button>
+        <button class="btn btn-primary" id="btn-add-topbar">+ Add <span class="kbd-hint">N</span></button>
+      </div>
+    </header>
+    <main id="view-root" class="view"></main>
+  </div>
+
+  <button class="fab" id="fab-add">+</button>
+  <nav class="bottom-nav" id="bottom-nav"></nav>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf-autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+/* db.js — IndexedDB wrapper. Falls back to localStorage if IndexedDB is unavailable. */
+
+const DB_NAME = 'MoneyAppDB';
+const DB_VERSION = 4;
+const STORES = ['users', 'transactions', 'groups', 'budgets', 'currencies', 'accounts', 'reminders', 'currency_history', 'loans', 'investments', 'audit_logs'];
+
+let _db = null;
+let _useLocalFallback = false;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) {
+      _useLocalFallback = true;
+      resolve(null);
+      return;
+    }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      STORES.forEach((store) => {
+        if (!db.objectStoreNames.contains(store)) {
+          const os = db.createObjectStore(store, { keyPath: 'id' });
+          if (store !== 'users') os.createIndex('userId', 'userId', { unique: false });
+          if (store === 'transactions') os.createIndex('accountId', 'accountId', { unique: false });
+        }
+      });
+    };
+    req.onsuccess = (e) => {
+      _db = e.target.result;
+      resolve(_db);
+    };
+    req.onerror = () => {
+      _useLocalFallback = true;
+      resolve(null);
+    };
+  });
+}
+
+/* ---------- localStorage fallback helpers ---------- */
+function lsGetAll(store) {
+  try {
+    return JSON.parse(localStorage.getItem('ls_' + store) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+function lsSetAll(store, arr) {
+  localStorage.setItem('ls_' + store, JSON.stringify(arr));
+}
+
+/* ---------- generic CRUD ---------- */
+const DB = {
+  async init() {
+    await openDB();
+  },
+
+  async put(store, record) {
+    if (_useLocalFallback) {
+      const all = lsGetAll(store);
+      const idx = all.findIndex((r) => r.id === record.id);
+      if (idx >= 0) all[idx] = record;
+      else all.push(record);
+      lsSetAll(store, all);
+      return record;
+    }
+    return new Promise((resolve, reject) => {
+      const tx = _db.transaction(store, 'readwrite');
+      tx.objectStore(store).put(record);
+      tx.oncomplete = () => resolve(record);
+      tx.onerror = () => reject(tx.error);
+    });
+  },
+
+  async delete(store, id) {
+    if (_useLocalFallback) {
+      const all = lsGetAll(store).filter((r) => r.id !== id);
+      lsSetAll(store, all);
+      return true;
+    }
+    return new Promise((resolve, reject) => {
+      const tx = _db.transaction(store, 'readwrite');
+      tx.objectStore(store).delete(id);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  },
+
+  async getAll(store) {
+    if (_useLocalFallback) return lsGetAll(store);
+    return new Promise((resolve, reject) => {
+      const tx = _db.transaction(store, 'readonly');
+      const req = tx.objectStore(store).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  async getAllByUser(store, userId) {
+    const all = await this.getAll(store);
+    return all.filter((r) => r.userId === userId);
+  },
+
+  async get(store, id) {
+    if (_useLocalFallback) return lsGetAll(store).find((r) => r.id === id) || null;
+    return new Promise((resolve, reject) => {
+      const tx = _db.transaction(store, 'readonly');
+      const req = tx.objectStore(store).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  },
+};
+
+function uid(prefix = 'id') {
+  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+
+/* auth.js — username/password auth with salted SHA-256 hashing (browser SubtleCrypto). */
+
+const SESSION_KEY = 'moneyapp_session';
+
+async function sha256Hex(text) {
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function randomSalt() {
+  const arr = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(arr).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+const Auth = {
+  currentUser: null,
+
+  async createUser(username, password) {
+    username = username.trim();
+    if (!username || !password) throw new Error('Please fill in both fields.');
+    const users = await DB.getAll('users');
+    if (users.some((u) => u.username.toLowerCase() === username.toLowerCase())) {
+      throw new Error('That username is already taken.');
+    }
+    const salt = randomSalt();
+    const passwordHash = await sha256Hex(salt + password);
+    const user = {
+      id: uid('user'),
+      username,
+      passwordHash,
+      salt,
+      createdAt: Date.now(),
+      settings: normalizeUserSettings({ defaultCurrency: 'USD', theme: 'light' }),
+    };
+    await DB.put('users', user);
+    await seedDefaultsForUser(user.id);
+    return user;
+  },
+
+  async login(username, password) {
+    const users = await DB.getAll('users');
+    const user = users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase());
+    if (!user) throw new Error('No account with that username.');
+    const hash = await sha256Hex(user.salt + password);
+    if (hash !== user.passwordHash) throw new Error('Wrong password.');
+    this.currentUser = user;
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ userId: user.id }));
+    return user;
+  },
+
+  async restoreSession() {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    try {
+      const { userId } = JSON.parse(raw);
+      const user = await DB.get('users', userId);
+      if (user) {
+        user.settings = normalizeUserSettings(user.settings);
+        this.currentUser = user;
+      }
+      return user;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  logout() {
+    this.currentUser = null;
+    localStorage.removeItem(SESSION_KEY);
+  },
+
+  async saveUser(user) {
+    await DB.put('users', user);
+    this.currentUser = user;
+  },
+};
+
+/* Give every new user a starter set of groups and currencies so the app isn't empty. */
+async function seedDefaultsForUser(userId) {
+  const incomeGroups = [
+    { name: 'Salary', icon: '💼', color: '#4C7A5A' },
+    { name: 'Gift', icon: '🎁', color: '#3E7C74' },
+    { name: 'Other Income', icon: '➕', color: '#767A3D' },
+  ];
+  const expenseGroups = [
+    { name: 'Food', icon: '🍽️', color: '#8C3B4A' },
+    { name: 'Transport', icon: '🚌', color: '#B5732E' },
+    { name: 'Bills', icon: '🧾', color: '#4A5C82' },
+    { name: 'Shopping', icon: '🛍️', color: '#A65A72' },
+    { name: 'Health', icon: '💊', color: '#6B4C7A' },
+    { name: 'Other', icon: '📦', color: '#C1633A' },
+  ];
+  for (const g of incomeGroups) {
+    await DB.put('groups', { id: uid('grp'), userId, type: 'income', ...g });
+  }
+  for (const g of expenseGroups) {
+    await DB.put('groups', { id: uid('grp'), userId, type: 'expense', ...g });
+  }
+  const currencies = [
+    { code: 'USD', name: 'US Dollar', symbol: '$', rate: 1, isDefault: true },
+    { code: 'EUR', name: 'Euro', symbol: '€', rate: 0.92 },
+    { code: 'INR', name: 'Indian Rupee', symbol: '₹', rate: 83.3 },
+  ];
+  for (const c of currencies) {
+    await DB.put('currencies', { id: uid('cur'), userId, ...c });
+  }
+}
+
+
+/* currency.js — formatting & conversion helpers.
+   Rates are stored as "units of this currency per 1 base unit" is NOT used;
+   instead rate = value of 1 unit of this currency expressed in the user's base (default) currency's terms:
+   we store rate = how many of this currency equal 1 default-currency unit (like a bank board rate).
+   To convert an amount FROM currency A TO currency B: amount / rateA * rateB. */
+
+const CurrencyUtil = {
+  list: [], // currencies for current user
+  defaultCode: 'USD',
+
+  setAll(currencies) {
+    this.list = currencies;
+    const def = currencies.find((c) => c.isDefault);
+    this.defaultCode = def ? def.code : (currencies[0] ? currencies[0].code : 'USD');
+  },
+
+  get(code) {
+    return this.list.find((c) => c.code === code) || { code, symbol: code, rate: 1 };
+  },
+
+  symbol(code) {
+    return this.get(code).symbol || code;
+  },
+
+  format(amount, code) {
+    const c = this.get(code);
+    const n = Number(amount || 0);
+    const abs = Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${n < 0 ? '-' : ''}${c.symbol}${abs}`;
+  },
+
+  // Convert amount from one currency to another using stored rates (rate = units per 1 default currency unit)
+  convert(amount, fromCode, toCode) {
+    if (fromCode === toCode) return Number(amount);
+    const from = this.get(fromCode);
+    const to = this.get(toCode);
+    const fromRate = Number(from.rate) || 1;
+    const toRate = Number(to.rate) || 1;
+    const inDefault = Number(amount) / fromRate;
+    return inDefault * toRate;
+  },
+
+  toDefault(amount, fromCode) {
+    return this.convert(amount, fromCode, this.defaultCode);
+  },
+};
+
+
+/* charts.js — thin wrappers around Chart.js for the dashboard & reports views. */
+
+const ChartRegistry = {};
+
+function destroyChart(key) {
+  if (ChartRegistry[key]) {
+    ChartRegistry[key].destroy();
+    delete ChartRegistry[key];
+  }
+}
+
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function chartLibReady() {
+  if (typeof Chart === 'undefined') {
+    console.warn('Chart.js has not loaded (no internet on first load?). Charts will appear once it loads.');
+    return false;
+  }
+  return true;
+}
+
+function renderIncomeExpenseBar(canvasId, labels, incomeData, expenseData) {
+  if (!chartLibReady()) return;
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  ChartRegistry[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Money In', data: incomeData, backgroundColor: cssVar('--accent'), borderRadius: 6, maxBarThickness: 26 },
+        { label: 'Money Out', data: expenseData, backgroundColor: cssVar('--coral'), borderRadius: 6, maxBarThickness: 26 },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, color: cssVar('--muted') } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: cssVar('--muted'), font: { size: 11 } } },
+        y: { grid: { color: cssVar('--line') }, ticks: { color: cssVar('--muted'), font: { size: 11 } } },
+      },
+    },
+  });
+}
+
+function renderGroupPie(canvasId, labels, data, colors) {
+  if (!chartLibReady()) return;
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (!data.length) return;
+  ChartRegistry[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: cssVar('--surface') }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10.5 }, color: cssVar('--muted') } } },
+    },
+  });
+}
+
+function renderTrendLine(canvasId, labels, data) {
+  if (!chartLibReady()) return;
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 220);
+  gradient.addColorStop(0, 'rgba(15,157,120,0.35)');
+  gradient.addColorStop(1, 'rgba(15,157,120,0)');
+  ChartRegistry[canvasId] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Total Money',
+        data,
+        borderColor: cssVar('--accent'),
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.35,
+        pointRadius: 3,
+        pointBackgroundColor: cssVar('--accent'),
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: cssVar('--muted'), font: { size: 11 } } },
+        y: { grid: { color: cssVar('--line') }, ticks: { color: cssVar('--muted'), font: { size: 11 } } },
+      },
+    },
+  });
+}
+
+
+/* app.js — main application controller */
+
+const State = {
+  user: null,
+  view: 'home',
+  transactions: [],
+  groups: [],
+  budgets: [],
+  accounts: [],
+  currencies: [],
+  search: '',
+  filters: { from: '', to: '', groupId: '', type: '' },
+  editingTxId: null,
+  viewingAccountId: null,
+  pendingAttachments: [],
+  currencyHistory: [],
+  loans: [],
+  investments: [],
+  auditLogs: [],
+  theme: 'light',
+  dateFormat: 'DD/MM/YYYY',
+  transferFilters: { from: '', to: '', status: '', accountId: '', minAmount: '' },
+  updateStatus: 'idle',
+  updateHistory: [],
+};
+State.reminders = [];
+
+const NAV_ITEMS = [
+  { id: 'home', label: 'Home', ic: '🏠' },
+  { id: 'accounts', label: 'Accounts', ic: '🏦' },
+  { id: 'income', label: 'Income', ic: '💰' },
+  { id: 'expenses', label: 'Expenses', ic: '💸' },
+  { id: 'transfers', label: 'Transfers', ic: '🔄' },
+  { id: 'reports', label: 'Reports', ic: '📊' },
+  { id: 'loans', label: 'Loans', ic: '🏛️' },
+  { id: 'investments', label: 'Investments', ic: '📈' },
+  { id: 'currency-history', label: 'Currency History', ic: '💱' },
+  { id: 'reminders', label: 'Reminders', ic: '🔔' },
+  { id: 'budgets', label: 'Budgets', ic: '🎯' },
+  { id: 'groups', label: 'Groups', ic: '🗂️' },
+  { id: 'settings', label: 'Settings', ic: '⚙️' },
+];
+
+/* ---------------- Boot ---------------- */
+window.addEventListener('DOMContentLoaded', boot);
+
+async function boot() {
+  await DB.init();
+  await Auth.restoreSession();
+  wireAuthScreen();
+  if (Auth.currentUser) {
+    await enterApp(Auth.currentUser);
+  } else {
+    showAuth();
+  }
+}
+
+function showAuth() {
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('app-shell').classList.add('hidden');
+}
+
+async function enterApp(user) {
+  State.user = user;
+  State.user.settings = normalizeUserSettings(State.user.settings);
+  State.theme = State.user.settings?.theme || 'light';
+  State.dateFormat = State.user.settings?.dateFormat || 'DD/MM/YYYY';
+  applyTheme(State.theme);
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app-shell').classList.remove('hidden');
+  await loadUserData();
+  buildSidebar();
+  checkReminders();
+  wireShell();
+  goTo('home');
+}
+
+async function loadUserData() {
+  const uidVal = State.user.id;
+  [State.transactions, State.groups, State.budgets, State.currencies, State.accounts, State.reminders, State.currencyHistory, State.loans, State.investments, State.auditLogs] = await Promise.all([
+      DB.getAllByUser('transactions', uidVal),
+      DB.getAllByUser('groups', uidVal),
+      DB.getAllByUser('budgets', uidVal),
+      DB.getAllByUser('currencies', uidVal),
+      DB.getAllByUser('accounts', uidVal),
+      DB.getAllByUser('reminders', uidVal),
+      DB.getAllByUser('currency_history', uidVal),
+      DB.getAllByUser('loans', uidVal),
+      DB.getAllByUser('investments', uidVal),
+      DB.getAllByUser('audit_logs', uidVal),
+  ]);
+  CurrencyUtil.setAll(State.currencies);
+}
+
+/* ---------------- Auth screen wiring ---------------- */
+function wireAuthScreen() {
+  const tabs = document.querySelectorAll('.auth-tabs button');
+  const loginForm = document.getElementById('login-form');
+  const signupForm = document.getElementById('signup-form');
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      const isLogin = tab.dataset.tab === 'login';
+      loginForm.classList.toggle('hidden', !isLogin);
+      signupForm.classList.toggle('hidden', isLogin);
+      document.getElementById('auth-error').textContent = '';
+    });
+  });
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+    try {
+      const user = await Auth.login(username, password);
+      loginForm.reset();
+      await enterApp(user);
+    } catch (err) {
+      document.getElementById('auth-error').textContent = err.message;
+    }
+  });
+
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('signup-username').value;
+    const password = document.getElementById('signup-password').value;
+    const password2 = document.getElementById('signup-password2').value;
+    if (password !== password2) {
+      document.getElementById('auth-error').textContent = 'Passwords do not match.';
+      return;
+    }
+    try {
+      const user = await Auth.createUser(username, password);
+      await Auth.login(username, password);
+      signupForm.reset();
+      await enterApp(user);
+    } catch (err) {
+      document.getElementById('auth-error').textContent = err.message;
+    }
+  });
+}
+
+/* ---------------- Sidebar & bottom nav ---------------- */
+function buildSidebar() {
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = NAV_ITEMS.map(
+    (item) => `<button class="nav-item" data-nav="${item.id}"><span class="ic">${item.ic}</span>${item.label}</button>`
+  ).join('');
+  nav.querySelectorAll('.nav-item').forEach((btn) => btn.addEventListener('click', () => goTo(btn.dataset.nav)));
+
+  const chip = document.getElementById('sidebar-user-chip');
+  chip.querySelector('.name').textContent = State.user.username;
+  chip.querySelector('.av').textContent = State.user.username.slice(0, 1).toUpperCase();
+}
+
+function buildBottomNav() {
+  const bn = document.getElementById('bottom-nav');
+  const items = NAV_ITEMS.filter((n) => ['home', 'accounts', 'income', 'expenses', 'reminders'].includes(n.id));
+  bn.innerHTML = items.map(
+    (item) => `<button data-nav="${item.id}"><span class="ic">${item.ic}</span>${item.label}</button>`
+  ).join('');
+  bn.querySelectorAll('button').forEach((btn) => btn.addEventListener('click', () => goTo(btn.dataset.nav)));
+}
+
+function wireShell() {
+  document.getElementById('btn-logout').addEventListener('click', () => {
+    Auth.logout();
+    location.reload();
+  });
+  document.getElementById('btn-logout-topbar')?.addEventListener('click', () => {
+    Auth.logout();
+    location.reload();
+  });
+  document.getElementById('fab-add').addEventListener('click', () => openTxModal());
+  document.getElementById('btn-add-topbar').addEventListener('click', () => openTxModal());
+  document.getElementById('global-search').addEventListener('input', (e) => {
+    State.search = (e.target.value || '').trim().toLowerCase();
+    renderView();
+  });
+  document.getElementById('theme-switch').addEventListener('click', toggleTheme);
+  document.getElementById('theme-switch').classList.toggle('on', State.theme === 'dark');
+
+  document.addEventListener('keydown', (e) => {
+    if (document.getElementById('modal-root').children.length) return;
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      document.getElementById('global-search').focus();
+    }
+    if ((e.key === 'n' || e.key === 'N') && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      openTxModal();
+    }
+  });
+}
+
+function toggleTheme() {
+  State.theme = State.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(State.theme);
+  document.getElementById('theme-switch').classList.toggle('on', State.theme === 'dark');
+  State.user.settings = normalizeUserSettings(State.user.settings);
+  State.user.settings.theme = State.theme;
+  Auth.saveUser(State.user);
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+}
+
+function checkReminders() {
+  const now = new Date();
+  const dueReminders = State.reminders.filter(r => new Date(r.nextDueDate) <= now && r.status !== 'completed');
+  if (dueReminders.length > 0) {
+    // This provides a less intrusive notification, guiding the user to the Reminders page for manual approval.
+    showToast(`${dueReminders.length} reminder(s) are due. Please review them.`);
+  }
+}
+
+/* ---------------- Routing ---------------- */
+function goTo(view, params = {}) {
+  State.view = view;
+  if (params.accountId) State.viewingAccountId = params.accountId;
+  document.querySelectorAll('.nav-item').forEach((b) => b.classList.toggle('active', b.dataset.nav === view));
+  document.querySelectorAll('#bottom-nav button').forEach((b) => b.classList.toggle('active', b.dataset.nav === view));
+  document.getElementById('topbar-title').textContent = NAV_ITEMS.find((n) => n.id === view)?.label || '';
+  renderView();
+}
+
+function renderView() {
+  const root = document.getElementById('view-root');
+  switch (State.view) {
+    case 'home': root.innerHTML = renderHome(); afterRenderHome(); break;
+    case 'accounts': root.innerHTML = renderAccounts(); afterRenderAccounts(); break;
+    case 'account-details': root.innerHTML = renderAccountDetails(); afterRenderAccountDetails(); break;
+    case 'income': root.innerHTML = renderTxList('income'); afterRenderTxList('income'); break;
+    case 'expenses': root.innerHTML = renderTxList('expense'); afterRenderTxList('expense'); break;
+    case 'transfers': root.innerHTML = renderTransfers(); afterRenderTransfers(); break;
+    case 'reports': root.innerHTML = renderReports(); afterRenderReports(); break;
+    case 'loans': root.innerHTML = renderLoans(); afterRenderLoans(); break;
+    case 'investments': root.innerHTML = renderInvestments(); afterRenderInvestments(); break;
+    case 'currency-history': root.innerHTML = renderCurrencyHistory(); afterRenderCurrencyHistory(); break;
+    case 'reminders': root.innerHTML = renderReminders(); afterRenderReminders(); break;
+    case 'budgets': root.innerHTML = renderBudgets(); afterRenderBudgets(); break;
+    case 'groups': root.innerHTML = renderGroups(); afterRenderGroups(); break;
+    case 'settings': root.innerHTML = renderSettings(); afterRenderSettings(); break;
+  }
+}
+
+/* ---------------- Helpers ---------------- */
+function fmt(amount, code) { return CurrencyUtil.format(amount, code); }
+function toDefault(amount, code) { return CurrencyUtil.toDefault(amount, code); }
+
+/**
+ * Calculates the total net worth across all accounts in the default currency.
+ * This is the most accurate way to calculate the total money, as it correctly
+ * sums up the balances of each account, avoiding inaccuracies from
+ * multi-currency transfer reporting.
+ */
+function calculateTotalNetWorth() {
+  return State.accounts.reduce((total, account) => total + getAccountBalance(account.id), 0);
+}
+
+function groupById(id) { return State.groups.find((g) => g.id === id); }
+function monthKey(date) { const d = new Date(date); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+function monthLabel(key) { const [y, m] = key.split('-'); return new Date(y, m - 1).toLocaleString(undefined, { month: 'short', year: '2-digit' }); }
+
+function totalsInDefault(txs) {
+  let income = 0, expense = 0;
+  txs.forEach((t) => {
+    const v = getTransactionValue(t);
+    if (t.type === 'income') income += v;
+    else if (t.type === 'expense') expense += v;
+  });
+  return { income, expense, net: income - expense };
+}
+
+function getTransferGroups() {
+  const grouped = new Map();
+  State.transactions.filter((t) => t.isTransfer && t.transferId).forEach((leg) => {
+    const existing = grouped.get(leg.transferId) || {
+      id: leg.transferId,
+      transferNumber: leg.transferNumber || '',
+      referenceNumber: leg.referenceNumber || '',
+      date: leg.date,
+      description: leg.description || '',
+      status: leg.status || 'pending',
+      transferFee: Number(leg.transferFee || 0),
+      exchangeRateUsed: Number(leg.exchangeRateUsed || 1),
+      convertedAmount: Number(leg.convertedAmount || 0),
+      transferAmount: Number(leg.transferAmount || 0),
+      sourceAccountId: '',
+      destinationAccountId: '',
+      sourceCurrency: '',
+      destinationCurrency: '',
+      sourceDescription: '',
+      destinationDescription: '',
+      attachments: [],
+      sourceLeg: null,
+      destinationLeg: null,
+    };
+    if (leg.transferSide === 'source') {
+      existing.sourceAccountId = leg.accountId;
+      existing.sourceCurrency = leg.currency;
+      existing.sourceDescription = leg.description || '';
+      existing.sourceLeg = leg;
+      existing.transferAmount = Number(leg.transferAmount || leg.amount || 0);
+      existing.transferFee = Number(leg.transferFee || 0);
+      existing.exchangeRateUsed = Number(leg.exchangeRateUsed || 1);
+      existing.convertedAmount = Number(leg.convertedAmount || 0);
+    } else {
+      existing.destinationAccountId = leg.accountId;
+      existing.destinationCurrency = leg.currency;
+      existing.destinationDescription = leg.description || '';
+      existing.destinationLeg = leg;
+      existing.transferAmount = Number(leg.transferAmount || existing.transferAmount || 0);
+      existing.transferFee = Number(leg.transferFee || existing.transferFee || 0);
+      existing.exchangeRateUsed = Number(leg.exchangeRateUsed || existing.exchangeRateUsed || 1);
+      existing.convertedAmount = Number(leg.convertedAmount || existing.convertedAmount || 0);
+    }
+    existing.attachments = [...new Set([...(existing.attachments || []), ...(leg.attachments || [])])];
+    existing.status = leg.status || existing.status || 'pending';
+    existing.date = leg.date || existing.date;
+    existing.description = leg.description || existing.description || '';
+    existing.transferNumber = leg.transferNumber || existing.transferNumber || '';
+    existing.referenceNumber = leg.referenceNumber || existing.referenceNumber || '';
+    grouped.set(leg.transferId, existing);
+  });
+  return Array.from(grouped.values()).filter((item) => item.sourceAccountId && item.destinationAccountId).sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function getAccountTypeDefinitions() {
+  const defaults = [
+    { id: 'bank', name: 'Bank Account', icon: '🏦' },
+    { id: 'card', name: 'Credit Card', icon: '💳' },
+    { id: 'cash', name: 'Cash', icon: '💵' },
+    { id: 'investment', name: 'Investment', icon: '📈' },
+    { id: 'loan', name: 'Loan', icon: '🏛️' },
+    { id: 'wallet', name: 'Digital Wallet', icon: '📱' },
+    { id: 'savings', name: 'Savings', icon: '🪙' },
+    { id: 'fixedDeposit', name: 'Fixed Deposit', icon: '🏦' },
+    { id: 'rdDeposit', name: 'RD Deposit', icon: '🧾' },
+  ];
+  const custom = Array.isArray(State.user?.settings?.accountTypes) ? State.user.settings.accountTypes : [];
+  return [...defaults, ...custom];
+}
+
+function getInvestmentCategoryDefinitions() {
+  const defaults = [
+    { id: 'fixed-deposit', name: 'Fixed Deposit', icon: '🏦' },
+    { id: 'recurring-deposit', name: 'Recurring Deposit', icon: '🧾' },
+    { id: 'stocks', name: 'Stocks', icon: '📈' },
+    { id: 'mutual-funds', name: 'Mutual Funds', icon: '🧺' },
+    { id: 'gold', name: 'Gold', icon: '🥇' },
+    { id: 'crypto', name: 'Crypto', icon: '₿' },
+    { id: 'bonds', name: 'Bonds', icon: '📜' },
+    { id: 'savings-certificates', name: 'Savings Certificates', icon: '🪪' },
+    { id: 'real-estate', name: 'Real Estate', icon: '🏠' },
+  ];
+  const custom = Array.isArray(State.user?.settings?.investmentCategories) ? State.user.settings.investmentCategories : [];
+  return [...defaults, ...custom];
+}
+
+function getAccountTypeMeta(typeKey) {
+  return getAccountTypeDefinitions().find((item) => item.id === typeKey) || { id: typeKey, name: typeKey, icon: '🏦' };
+}
+
+function getInvestmentCategoryMeta(categoryKey) {
+  return getInvestmentCategoryDefinitions().find((item) => item.id === categoryKey) || { id: categoryKey, name: categoryKey, icon: '📈' };
+}
+
+function getInvestmentMetrics(investment) {
+  const purchaseAmount = Number(investment.purchaseAmount || 0);
+  const currentValue = Number(investment.currentValue || 0);
+  const manualProfit = Array.isArray(investment.profitEntries)
+    ? investment.profitEntries.reduce((sum, entry) => sum + Number(entry.amount || 0), 0)
+    : 0;
+  const derivedProfit = currentValue - purchaseAmount + manualProfit + Number(investment.profit || 0);
+  const profitPercentage = purchaseAmount > 0 ? (derivedProfit / purchaseAmount) * 100 : 0;
+  const purchaseDate = investment.purchaseDate ? new Date(investment.purchaseDate) : null;
+  const monthsDiff = purchaseDate && !Number.isNaN(purchaseDate.getTime()) && purchaseAmount > 0 && currentValue > 0
+    ? Math.max(1, (new Date().getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24 * 30))
+    : 0;
+  const monthlyGrowth = monthsDiff > 0 ? ((Math.pow(currentValue / Math.max(purchaseAmount, 1), 1 / monthsDiff) - 1) * 100) : 0;
+  const yearlyGrowth = monthsDiff > 0 ? monthlyGrowth * 12 : 0;
+  return { derivedProfit, profitPercentage, monthlyGrowth, yearlyGrowth, manualProfit };
+}
+
+function getAccountBalance(accountId) {
+  const account = State.accounts.find((item) => item.id === accountId);
+  if (!account) return 0;
+  let balance = Number(account.openingBalance || 0);
+  State.transactions.filter((t) => t.accountId === accountId).forEach((t) => {
+    const isPostedTransfer = t.isTransfer ? t.status === 'completed' : true;
+    if (!isPostedTransfer) return;
+    const amountInDefault = getTransactionValue(t);
+    if (t.type === 'income') balance += amountInDefault;
+    else if (t.type === 'expense') balance -= amountInDefault;
+  });
+  return balance;
+}
+
+function generateTransferNumber() {
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  return `TRF-${stamp}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
+function escapeHtml(str) {
+  return String(str || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function getFileExtension(name) {
+  return String(name || '').split('.').pop()?.toLowerCase() || '';
+}
+
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let size = bytes;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+  return `${size.toFixed(size >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function isPreviewableAttachment(attachment) {
+  const type = String(attachment?.type || '').toLowerCase();
+  const name = String(attachment?.name || '').toLowerCase();
+  return type.startsWith('image/') || type === 'application/pdf' || name.endsWith('.pdf') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png');
+}
+
+function buildAttachmentActionHtml(attachment, index, collectionKey = 'attachments', onDelete = null, onReplace = null) {
+  const preview = isPreviewableAttachment(attachment) ? `<button class="btn btn-sm btn-ghost attach-preview" data-index="${index}" data-collection="${collectionKey}">Preview</button>` : '';
+  return `
+    <div class="attach-chip" data-index="${index}" data-collection="${collectionKey}">
+      <span>${escapeHtml(attachment.name || 'Attachment')}</span>
+      <span class="mono">${formatFileSize(attachment.size || 0)}</span>
+      <button class="btn btn-sm btn-ghost" data-action="download" data-index="${index}" data-collection="${collectionKey}">Download</button>
+      ${preview}
+      <button class="btn btn-sm btn-ghost" data-action="rename" data-index="${index}" data-collection="${collectionKey}">Rename</button>
+      <button class="btn btn-sm btn-ghost" data-action="replace" data-index="${index}" data-collection="${collectionKey}">Replace</button>
+      <button class="btn btn-sm btn-danger" data-action="delete" data-index="${index}" data-collection="${collectionKey}">Delete</button>
+    </div>`;
+}
+
+function createAttachmentEntry(file, extra = {}) {
+  return {
+    name: file.name,
+    type: file.type || 'application/octet-stream',
+    size: file.size,
+    uploadedAt: new Date().toISOString(),
+    uploadedBy: State.user?.username || 'System',
+    dataUrl: '',
+    ...extra,
+  };
+}
+
+function getAttachmentCollection(target) {
+  if (Array.isArray(target)) return target;
+  return Array.isArray(target?.attachments) ? target.attachments : [];
+}
+
+async function addFilesToAttachmentList(files, target, collectionKey = 'attachments') {
+  const list = getAttachmentCollection(target);
+  for (const file of files) {
+    if (file.size > 8 * 1024 * 1024) {
+      showToast(`${file.name} is too big (max 8MB)`);
+      continue;
+    }
+    const dataUrl = await fileToDataUrl(file);
+    const attachment = createAttachmentEntry(file, { dataUrl, transactionId: target?.id || null, transactionNumber: target?.transferNumber || target?.loanNumber || target?.investmentName || null });
+    list.push(attachment);
+  }
+  if (target && target.id) {
+    target.attachments = list;
+  }
+  return list;
+}
+
+async function handleAttachmentAction(action, collection, index, target, collectionKey = 'attachments') {
+  if (!collection || !collection[index]) return;
+  const item = collection[index];
+  if (action === 'download') {
+    if (item.dataUrl) {
+      const link = document.createElement('a');
+      link.href = item.dataUrl;
+      link.download = item.name;
+      link.click();
+    }
+    showToast('Download started');
+    return;
+  }
+  if (action === 'rename') {
+    const nextName = prompt('Rename file', item.name);
+    if (!nextName) return;
+    collection[index] = { ...item, name: nextName };
+    if (target && target.id) target.attachments = collection;
+    showToast('File renamed');
+    renderView();
+    return;
+  }
+  if (action === 'replace') {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png,.docx,.xlsx,.zip';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const dataUrl = await fileToDataUrl(file);
+      collection[index] = createAttachmentEntry(file, { ...item, name: file.name, type: file.type, size: file.size, dataUrl, uploadedAt: new Date().toISOString(), uploadedBy: State.user?.username || 'System' });
+      if (target && target.id) target.attachments = collection;
+      showToast('File replaced');
+      renderView();
+    };
+    input.click();
+    return;
+  }
+  if (action === 'delete') {
+    if (!confirm('Delete this file?')) return;
+    collection.splice(index, 1);
+    if (target && target.id) target.attachments = collection;
+    showToast('File deleted');
+    renderView();
+  }
+}
+
+function renderAttachmentToolbar(containerId, attachments, target, collectionKey = 'attachments') {
+  const box = document.getElementById(containerId);
+  if (!box) return;
+  if (!attachments?.length) {
+    box.innerHTML = '<div class="empty-state" style="padding:12px 0;"><p>No attachments yet.</p></div>';
+    return;
+  }
+  box.innerHTML = attachments.map((attachment, index) => buildAttachmentActionHtml(attachment, index, collectionKey)).join('');
+  box.querySelectorAll('[data-action]').forEach((button) => {
+    button.addEventListener('click', async (event) => {
+      event.preventDefault();
+      const action = button.dataset.action;
+      const index = Number(button.dataset.index || 0);
+      await handleAttachmentAction(action, attachments, index, target, collectionKey);
+    });
+  });
+  box.querySelectorAll('.attach-preview').forEach((button) => {
+    button.addEventListener('click', async (event) => {
+      event.preventDefault();
+      const index = Number(button.dataset.index || 0);
+      const item = attachments[index];
+      if (!item) return;
+      if (item.type.startsWith('image/')) {
+        const win = window.open('', '_blank');
+        win.document.write(`<img src="${item.dataUrl}" style="max-width:100%;" />`);
+        return;
+      }
+      if (item.type === 'application/pdf' || String(item.name || '').toLowerCase().endsWith('.pdf')) {
+        const win = window.open('', '_blank');
+        win.document.write(`<iframe src="${item.dataUrl}" style="width:100%;height:100vh;border:none"></iframe>`);
+      }
+    });
+  });
+}
+
+function recordAuditEvent(action, details = {}) {
+  const entry = {
+    id: uid('audit'),
+    userId: State.user?.id,
+    action,
+    details,
+    createdAt: Date.now(),
+    timestamp: new Date().toISOString(),
+  };
+  State.auditLogs = State.auditLogs.filter((item) => item.id !== entry.id).concat(entry);
+  DB.put('audit_logs', entry).catch(() => {});
+  return entry;
+}
+
+function openAttachmentManager(target, title = 'Attachments') {
+  const attachments = Array.isArray(target?.attachments) ? target.attachments : [];
+  openModal(`
+    <h3>${escapeHtml(title)}</h3>
+    <div class="field">
+      <label>Add Files</label>
+      <div class="attach-drop" id="attach-manager-drop">Tap to add a file</div>
+      <input type="file" id="attach-manager-file" class="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,.zip,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip">
+      <div class="attach-list" id="attach-manager-list"></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="modal-cancel">Close</button></div>
+  `);
+  const renderManager = () => renderAttachmentToolbar('attach-manager-list', attachments, target, 'attachments');
+  document.getElementById('attach-manager-drop').addEventListener('click', () => document.getElementById('attach-manager-file').click());
+  document.getElementById('attach-manager-file').addEventListener('change', async (event) => {
+    const files = Array.from(event.target.files || []);
+    for (const file of files) {
+      const dataUrl = await fileToDataUrl(file);
+      attachments.push({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl, uploadedAt: new Date().toISOString(), uploadedBy: State.user?.username || 'System' });
+    }
+    target.attachments = attachments;
+    renderManager();
+    event.target.value = '';
+  });
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  renderManager();
+}
+
+function normalizeUserSettings(settings = {}) {
+  return {
+    defaultCurrency: 'USD',
+    theme: 'light',
+    dateFormat: 'DD/MM/YYYY',
+    language: 'English',
+    appVersion: '1.0.0',
+    buildNumber: '1',
+    releaseDate: '2026-07-07',
+    enableAutomaticUpdates: false,
+    downloadUpdatesAutomatically: false,
+    notifyBeforeInstalling: true,
+    installSecurityUpdatesAutomatically: true,
+    backupBeforeUpdate: true,
+    updateHistory: [],
+    ...settings,
+  };
+}
+
+function getPreferredCurrencyCode() {
+  return State.user?.settings?.defaultCurrency || CurrencyUtil.defaultCode || 'USD';
+}
+
+function getDateFormat() {
+  return State.user?.settings?.dateFormat || State.dateFormat || 'DD/MM/YYYY';
+}
+
+function formatDateValue(dateValue) {
+  if (!dateValue) return '';
+  const d = new Date(dateValue);
+  if (Number.isNaN(d.getTime())) return dateValue;
+  const fmt = getDateFormat();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  if (fmt === 'MM/DD/YYYY') return `${month}/${day}/${year}`;
+  if (fmt === 'YYYY-MM-DD') return `${year}-${month}-${day}`;
+  return `${day}/${month}/${year}`;
+}
+
+function formatDateForInput(dateValue) {
+  if (!dateValue) return '';
+  const d = new Date(dateValue);
+  if (Number.isNaN(d.getTime())) return dateValue;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function compareDateValues(a, b) {
+  const left = new Date(a || 0);
+  const right = new Date(b || 0);
+  if (Number.isNaN(left.getTime()) || Number.isNaN(right.getTime())) return 0;
+  return left.getTime() - right.getTime();
+}
+
+function getTransactionValue(tx, toCode = getPreferredCurrencyCode()) {
+  const code = toCode || getPreferredCurrencyCode();
+  if (tx.baseCurrency && tx.baseAmount != null) {
+    return CurrencyUtil.convert(Number(tx.baseAmount), tx.baseCurrency, code);
+  }
+  if (tx.convertedAmount != null && tx.exchangeRate && tx.originalCurrency && tx.originalCurrency !== tx.currency) {
+    return CurrencyUtil.convert(Number(tx.convertedAmount), tx.currency || tx.originalCurrency, code);
+  }
+  return CurrencyUtil.convert(Number(tx.amount || 0), tx.currency, code);
+}
+
+function buildCurrencyHistoryEntry({ id, transactionId, moduleName, date, transactionNumber, originalCurrency, baseCurrency, exchangeRate, originalAmount, convertedAmount, status, userId }) {
+  const difference = Number(convertedAmount || 0) - Number(originalAmount || 0);
+  return {
+    id: id || uid('ch'),
+    userId: userId || State.user?.id,
+    transactionId,
+    moduleName,
+    date,
+    transactionNumber,
+    originalCurrency,
+    baseCurrency: baseCurrency || getPreferredCurrencyCode(),
+    exchangeRate: Number(exchangeRate || 1),
+    originalAmount: Number(originalAmount || 0),
+    convertedAmount: Number(convertedAmount || 0),
+    difference: Number(difference || 0),
+    status: status || 'Completed',
+    createdAt: Date.now(),
+  };
+}
+
+async function saveCurrencyHistoryEntry(entry) {
+  const record = buildCurrencyHistoryEntry(entry);
+  await DB.put('currency_history', record);
+  State.currencyHistory = State.currencyHistory.filter((item) => item.id !== record.id).concat(record);
+  return record;
+}
+
+function getFilteredTransactionList(items, includeTransfers = false) {
+  return items.filter((t) => {
+    if (!includeTransfers && t.isTransfer) return false;
+    if (State.filters.from) {
+      const from = new Date(State.filters.from);
+      const current = new Date(t.date || '');
+      if (Number.isNaN(current.getTime()) || current < from) return false;
+    }
+    if (State.filters.to) {
+      const to = new Date(State.filters.to);
+      const current = new Date(t.date || '');
+      if (Number.isNaN(current.getTime()) || current > to) return false;
+    }
+    if (State.filters.groupId && t.groupId !== State.filters.groupId) return false;
+    if (State.search) {
+      const haystack = [t.description, t.referenceNumber, t.transferNumber, groupById(t.groupId)?.name, State.accounts.find((a) => a.id === t.accountId)?.name, t.currency].filter(Boolean).join(' ').toLowerCase();
+      if (!haystack.includes(State.search)) return false;
+    }
+    return true;
+  });
+}
+
+function getFilteredTransfers() {
+  return getTransferGroups().filter((item) => {
+    const from = document.getElementById('rep-from')?.value || document.getElementById('transfer-from')?.value || State.filters.from || '';
+    const to = document.getElementById('rep-to')?.value || document.getElementById('transfer-to')?.value || State.filters.to || '';
+    const status = document.getElementById('transfer-status')?.value || '';
+    const matchesFrom = !from || compareDateValues(item.date, from) >= 0;
+    const matchesTo = !to || compareDateValues(item.date, to) <= 0;
+    const matchesStatus = !status || (item.status || 'pending') === status;
+    const matchesSearch = !State.search || [item.description, item.referenceNumber, item.transferNumber, item.sourceCurrency, item.destinationCurrency].join(' ').toLowerCase().includes(State.search);
+    return matchesFrom && matchesTo && matchesStatus && matchesSearch;
+  });
+}
+
+function getFilteredCurrencyHistory() {
+  return State.currencyHistory.filter((item) => {
+    if (State.search) {
+      const haystack = [item.transactionNumber, item.moduleName, item.originalCurrency, item.baseCurrency, item.status].join(' ').toLowerCase();
+      if (!haystack.includes(State.search)) return false;
+    }
+    return true;
+  }).sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+}
+
+function refreshView() {
+  renderView();
+}
+
+/* ================= HOME (Dashboard) ================= */
+function renderHome() {
+  const allTxs = State.transactions;
+  const net = calculateTotalNetWorth();
+  const nonTransferTxs = allTxs.filter(t => !t.isTransfer);
+  const { income, expense } = totalsInDefault(nonTransferTxs);
+  const defSym = CurrencyUtil.symbol(CurrencyUtil.defaultCode);
+
+  const thisMonthKey = monthKey(new Date());
+  const monthTx = nonTransferTxs.filter((t) => monthKey(t.date) === thisMonthKey);
+  const monthTotals = totalsInDefault(monthTx);
+  const savingsRate = monthTotals.income > 0 ? Math.max(0, Math.min(100, Math.round((monthTotals.net / monthTotals.income) * 100))) : 0;
+  const recent = [...allTxs].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
+
+  return `
+    <div class="hero-money card">
+      <div>
+        <div class="label">Total Money</div>
+        <div class="amount mono">${defSym}${net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        <div class="label" style="margin-top:8px; opacity:.85; font-weight:500; text-transform:none;">This month: ${defSym}${monthTotals.net.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      </div>
+      ${jarSvg(savingsRate)}
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card card">
+        <div class="top"><div class="ic" style="background:var(--accent-soft); color:var(--accent-ink);">💰</div></div>
+        <div class="val mono">${fmt(income, CurrencyUtil.defaultCode)}</div>
+        <div class="lbl">Money In (All Time)</div>
+      </div>
+      <div class="stat-card card">
+        <div class="top"><div class="ic" style="background:var(--coral-soft); color:var(--coral);">💸</div></div>
+        <div class="val mono">${fmt(expense, CurrencyUtil.defaultCode)}</div>
+        <div class="lbl">Money Out (All Time)</div>
+      </div>
+      <div class="stat-card card">
+        <div class="top"><div class="ic" style="background:var(--info-soft); color:var(--info);">🏦</div></div>
+        <div class="val mono">${fmt(monthTotals.income, CurrencyUtil.defaultCode)}</div>
+        <div class="lbl">Money In (This Month)</div>
+      </div>
+      <div class="stat-card card">
+        <div class="top"><div class="ic" style="background:var(--gold-soft); color:var(--gold);">🎯</div></div>
+        <div class="val mono">${fmt(monthTotals.expense, CurrencyUtil.defaultCode)}</div>
+        <div class="lbl">Money Out (This Month)</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card card">
+        <h3>Money In vs Money Out (Last 6 Months)</h3>
+        <canvas id="chart-bar"></canvas>
+      </div>
+      <div class="chart-card card">
+        <h3>Spending by Group</h3>
+        <canvas id="chart-pie"></canvas>
+      </div>
+    </div>
+    <div class="chart-card card" style="margin-bottom:20px;">
+      <h3>Total Money Over Time</h3>
+      <canvas id="chart-line"></canvas>
+    </div>
+
+    <div class="list-card card">
+      <div class="list-head"><h3>Recent Activity</h3><button class="btn btn-ghost btn-sm" id="see-all-tx">See All</button></div>
+      ${recent.length ? recent.map(txRowHtml).join('') : emptyState('📭', 'No transactions yet', 'Tap the + button to add your first one.')}
+    </div>
+  `;
+}
+
+/* The jar is the hero's signature element: a literal coin jar that fills up
+   by how much of this month's money has stayed saved, instead of a generic
+   ring gauge. Interior body spans y=24..122 (98px tall) inside the outline. */
+function jarSvg(pct) {
+  const top = 24, bodyH = 98;
+  const liquidH = Math.max(0, (pct / 100) * bodyH);
+  const liquidY = top + (bodyH - liquidH);
+  return `
+    <div class="jar-wrap">
+      <svg class="jar-svg" viewBox="0 0 104 132" width="88" height="112">
+        <rect x="35" y="2" width="34" height="12" rx="4" class="jar-lid"></rect>
+        <rect x="39" y="12" width="26" height="10" class="jar-lid" opacity="0.7"></rect>
+        <clipPath id="jarClip"><rect x="19" y="24" width="66" height="98" rx="18"></rect></clipPath>
+        <g clip-path="url(#jarClip)">
+          <rect x="19" y="${liquidY.toFixed(1)}" width="66" height="${(liquidH + 6).toFixed(1)}" class="jar-liquid"></rect>
+          <rect x="19" y="${liquidY.toFixed(1)}" width="66" height="3" class="jar-wave"></rect>
+        </g>
+        <rect x="17" y="22" width="70" height="102" rx="20" class="jar-outline"></rect>
+      </svg>
+      <div class="jar-caption"><strong>${pct}%</strong>kept this month</div>
+    </div>
+  `;
+}
+
+function afterRenderHome() {
+  document.getElementById('see-all-tx')?.addEventListener('click', () => goTo('expenses'));
+  wireTxRowButtons();
+
+  // Bar: last 6 months income vs expense
+  const txsForChart = State.transactions.filter(t => !t.isTransfer);
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(monthKey(d));
+  }
+  const incomeData = months.map((mk) => totalsInDefault(txsForChart.filter((t) => t.type === 'income' && monthKey(t.date) === mk)).income);
+  const expenseData = months.map((mk) => totalsInDefault(txsForChart.filter((t) => t.type === 'expense' && monthKey(t.date) === mk)).expense);
+  renderIncomeExpenseBar('chart-bar', months.map(monthLabel), incomeData, expenseData);
+
+  // Pie: spending by group (expenses only)
+  const expenseGroups = State.groups.filter((g) => g.type === 'expense');
+  const pieLabels = [], pieData = [], pieColors = [];
+  const expenseTxsForPie = txsForChart.filter(t => t.type === 'expense');
+  expenseGroups.forEach((g) => {
+    const sum = totalsInDefault(expenseTxsForPie.filter((t) => t.groupId === g.id)).expense;
+    if (sum > 0) { pieLabels.push(g.name); pieData.push(Number(sum.toFixed(2))); pieColors.push(g.color); }
+  });
+  renderGroupPie('chart-pie', pieLabels, pieData, pieColors);
+
+  // Line: running total over last 6 months
+  let running = 0;
+  const beforeStart = State.transactions.filter((t) => new Date(t.date) < new Date(now.getFullYear(), now.getMonth() - 5, 1));
+  running = totalsInDefault(beforeStart).net;
+  const lineData = months.map((mk) => {
+    const t = totalsInDefault(State.transactions.filter((tr) => monthKey(tr.date) === mk && !tr.isTransfer));
+    running += t.net;
+    return Number(running.toFixed(2));
+  });
+  renderTrendLine('chart-line', months.map(monthLabel), lineData);
+}
+
+/* ================= ACCOUNTS ================= */
+function renderAccounts() {
+  const accountTypes = [
+    { key: 'bank', name: 'Bank' },
+    { key: 'card', name: 'Credit Card' },
+    { key: 'cash', name: 'Cash' },
+    { key: 'investment', name: 'Investment' },
+    { key: 'loan', name: 'Loan' },
+    { key: 'wallet', name: 'Digital Wallet' },
+    { key: 'savings', name: 'Savings' },
+    { key: 'fixedDeposit', name: 'Fixed Deposit' },
+    { key: 'rdDeposit', name: 'RD Deposit' },
+  ];
+  let html = `<div style="display:flex; justify-content:flex-end; margin-bottom:16px;"><button class="btn btn-primary" id="add-account-btn">+ Add Account</button></div>`;
+
+  accountTypes.forEach(type => {
+    const accountsOfType = State.accounts.filter(a => a.type === type.key);
+    html += `<h3 style="margin-bottom:12px;">${type.name} Accounts</h3>`;
+    if (accountsOfType.length) {
+      html += `<div class="groups-grid" style="margin-bottom:28px;">${accountsOfType.map(accountTile).join('')}</div>`;
+    } else {
+      html += emptyState('🏦', `No ${type.name.toLowerCase()} accounts`, 'Add one to get started.');
+    }
+  });
+
+  return html;
+}
+
+function accountTile(a) {
+  const balance = getAccountBalance(a.id);
+  const icon = a.type === 'bank' ? '🏦' : (a.type === 'card' ? '💳' : (a.type === 'cash' ? '💵' : (a.type === 'investment' ? '📈' : (a.type === 'loan' ? '🏛️' : (a.type === 'wallet' ? '📱' : (a.type === 'savings' ? '🪙' : (a.type === 'fixedDeposit' ? '🏦' : '🧾')))))));
+
+  return `
+    <div class="group-tile card" data-id="${a.id}">
+      <div class="tile-actions"><button class="btn btn-icon btn-ghost btn-sm edit-account" title="Edit">✏️</button><button class="btn btn-icon btn-ghost btn-sm del-account" title="Delete">🗑️</button></div>
+      <div class="ic" style="background:var(--info-soft); color:var(--info);">${icon}</div>
+      <div class="name">${escapeHtml(a.name)}</div>
+      <div class="spend mono">${fmt(balance, CurrencyUtil.defaultCode)}</div>
+      <div class="spend">${escapeHtml(a.currency || CurrencyUtil.defaultCode)}${a.allowOverdraft ? ' · Overdraft' : ''}</div>
+    </div>`;
+}
+
+function afterRenderAccounts() {
+  document.getElementById('add-account-btn').addEventListener('click', () => openAccountModal());
+  document.querySelectorAll('.group-tile').forEach((tile) => tile.addEventListener('click', (e) => {
+    if (e.target.closest('.tile-actions')) return;
+    goTo('account-details', { accountId: tile.dataset.id });
+  }));
+  document.querySelectorAll('.edit-account').forEach((btn) => btn.addEventListener('click', (e) => {
+    const id = e.target.closest('.group-tile').dataset.id;
+    openAccountModal(State.accounts.find(a => a.id === id));
+  }));
+  document.querySelectorAll('.del-account').forEach((btn) => btn.addEventListener('click', async (e) => {
+    const id = e.target.closest('.group-tile').dataset.id;
+    const used = State.transactions.some((t) => t.accountId === id);
+    if (used && !confirm('This account has transactions. Deleting it will NOT delete the transactions, but they will be un-accounted. Continue?')) return;
+    if (!used && !confirm('Delete this account?')) return;
+    await DB.delete('accounts', id);
+    State.accounts = State.accounts.filter((a) => a.id !== id);
+    renderView(); showToast('Account deleted');
+  }));
+}
+
+function openAccountModal(existing) {
+  const accountTypes = [{ id: 'bank', name: 'Bank Account' },{ id: 'card', name: 'Credit Card' },{ id: 'cash', name: 'Cash' },{ id: 'investment', name: 'Investment' },{ id: 'loan', name: 'Loan' },{ id: 'wallet', name: 'Digital Wallet' },{ id: 'savings', name: 'Savings' },{ id: 'fixedDeposit', name: 'Fixed Deposit' },{ id: 'rdDeposit', name: 'RD Deposit' }];
+  const typeOptions = accountTypes.map(t => `<option value="${t.id}" ${existing?.type === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+  const currencyOptions = State.currencies.map((c) => `<option value="${c.code}" ${((existing?.currency || CurrencyUtil.defaultCode) === c.code ? 'selected' : '')}>${c.code}</option>`).join('');
+  openModal(`<h3>${existing ? 'Edit Account' : 'Add Account'}</h3><div class="form-grid"><div class="field"><label>Account Name</label><input type="text" id="account-name" value="${existing ? escapeHtml(existing.name) : ''}" placeholder="e.g. My Savings"></div><div class="field"><label>Account Type</label><select id="account-type">${typeOptions}</select></div><div class="two-col"><div class="field"><label>Currency</label><select id="account-currency">${currencyOptions}</select></div><div class="field"><label>Overdraft</label><label style="display:flex; align-items:center; gap:8px; margin-top:6px;"><input type="checkbox" id="account-overdraft" ${existing?.allowOverdraft ? 'checked' : ''}> Allow negative balances</label></div></div></div><div class="modal-actions"><button class="btn btn-ghost" id="modal-cancel">Cancel</button><button class="btn btn-primary" id="account-save">Save</button></div>`);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('account-save').addEventListener('click', async () => {
+    const name = document.getElementById('account-name').value.trim();
+    const type = document.getElementById('account-type').value;
+    const currency = document.getElementById('account-currency').value;
+    const allowOverdraft = document.getElementById('account-overdraft').checked;
+    if (!name) { showToast('Please enter a name'); return; }
+    const record = existing ? { ...existing, name, type, currency, allowOverdraft } : { id: uid('acc'), userId: State.user.id, name, type, currency, allowOverdraft, createdAt: Date.now() };
+    await DB.put('accounts', record);
+    State.accounts = State.accounts.filter((a) => a.id !== record.id).concat(record);
+    closeModal(); renderView(); showToast('Account saved');
+  });
+}
+
+/* ================= ACCOUNT DETAILS ================= */
+function renderAccountDetails() {
+  const account = State.accounts.find(a => a.id === State.viewingAccountId);
+  if (!account) return emptyState('❓', 'Account not found', 'Go back and try again.');
+
+  const list = State.transactions.filter(t => t.accountId === account.id).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  let balance = 0;
+  State.transactions.filter(t => t.accountId === account.id).forEach(t => {
+    const amountInDefault = toDefault(t.amount, t.currency);
+    if (t.type === 'income') balance += amountInDefault;
+    else balance -= amountInDefault;
+  });
+
+  const icon = account.type === 'bank' ? '🏦' : (account.type === 'card' ? '💳' : '💵');
+
+  return `
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+      <button class="btn btn-ghost" id="back-to-accounts">← Back to Accounts</button>
+      <div style="display:flex; align-items:center; gap:12px; margin-left:auto;">
+        <div class="ic" style="background:var(--info-soft); color:var(--info); font-size:22px; width:48px; height:48px; border-radius:14px;">${icon}</div>
+        <div>
+          <h2 style="font-size:22px;">${escapeHtml(account.name)}</h2>
+          <div class="mono" style="font-size:18px; font-weight:700; color:var(--muted);">Balance: ${fmt(balance, CurrencyUtil.defaultCode)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="list-card card">
+      <div class="list-head"><h3>Transaction History</h3></div>
+      ${list.length ? list.map(txRowHtml).join('') : emptyState('📭', 'No transactions for this account.', 'Add a transaction to this account to see it here.')}
+    </div>
+  `;
+}
+
+function afterRenderAccountDetails() {
+  document.getElementById('back-to-accounts').addEventListener('click', () => goTo('accounts'));
+  wireTxRowButtons();
+}
+
+/* ================= REMINDERS ================= */
+function renderReminders() {
+  const list = State.reminders.sort((a, b) => new Date(a.nextDueDate) - new Date(b.nextDueDate));
+  const rows = list.map(reminderRowHtml).join('');
+  return `
+    <div style="display:flex; justify-content:flex-end; margin-bottom:16px;"><button class="btn btn-primary" id="add-reminder-btn">+ Add Reminder</button></div>
+    <div class="list-card card">
+      <div class="list-head"><h3>Reminders</h3></div>
+      ${rows || emptyState('🔔', 'No reminders yet', 'Set reminders for recurring bills or income.')}
+    </div>
+  `;
+}
+
+function reminderRowHtml(r) {
+  const t = r.transactionDetails;
+  const g = groupById(t.groupId);
+  const a = State.accounts.find(acc => acc.id === t.accountId);
+  const isDue = new Date(r.nextDueDate) <= new Date();
+  return `
+    <div class="tx-row" data-id="${r.id}" style="${isDue && r.status !== 'completed' ? 'background: var(--gold-soft);' : ''}">
+      <div class="ic" style="background:${g ? g.color + '22' : '#ddd'}; color:${g ? g.color : '#666'};">🔔</div>
+      <div class="info">
+        <div class="desc">${escapeHtml(r.title)}</div>
+        <div class="meta">
+          Next on ${formatDateValue(r.nextDueDate)}.
+          ${r.repeat !== 'none' ? `Repeats ${r.repeat}.` : ''}
+          (${fmt(t.amount, t.currency)} for ${g?.name || 'Transfer'})
+        </div>
+      </div>
+      <div class="row-actions">
+        ${isDue && r.status !== 'completed' ? `<button class="btn btn-sm btn-primary approve-reminder" title="Approve & Record">Approve</button>` : ''}
+        <button class="btn btn-icon btn-ghost btn-edit-reminder" title="Edit">✏️</button>
+        <button class="btn btn-icon btn-ghost btn-del-reminder" title="Delete">🗑️</button>
+      </div>
+    </div>
+  `;
+}
+
+function afterRenderReminders() {
+  document.getElementById('add-reminder-btn').addEventListener('click', () => openReminderModal());
+  document.querySelectorAll('.btn-edit-reminder').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const id = e.target.closest('.tx-row').dataset.id;
+      openReminderModal(State.reminders.find(r => r.id === id));
+    });
+  });
+  document.querySelectorAll('.btn-del-reminder').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      const id = e.target.closest('.tx-row').dataset.id;
+      if (!confirm('Delete this reminder?')) return;
+      await DB.delete('reminders', id);
+      State.reminders = State.reminders.filter(r => r.id !== id);
+      renderView();
+      showToast('Reminder deleted');
+    });
+  });
+  document.querySelectorAll('.approve-reminder').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const id = e.target.closest('.tx-row').dataset.id;
+      approveReminder(id);
+    });
+  });
+}
+
+async function approveReminder(reminderId) {
+  const reminder = State.reminders.find(r => r.id === reminderId);
+  if (!reminder) {
+    showToast('Reminder not found.');
+    return;
+  }
+
+  const txDetails = reminder.transactionDetails;
+  const confirmMsg = `Are you sure you want to approve and record the transaction for "${reminder.title}"?`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    if (txDetails.isTransfer) {
+      // Handle transfer reminder
+      const { fromAccountId, toAccountId, fromAmount, fromCurrency, toAmount, toCurrency, description, referenceNumber, transferFee } = txDetails;
+      const fromAccountName = State.accounts.find(a => a.id === fromAccountId).name;
+      const toAccountName = State.accounts.find(a => a.id === toAccountId).name;
+      const transferId = uid('trn');
+
+      const transferDate = new Date().toISOString().slice(0, 10);
+      const expenseLeg = { id: uid('tx'), userId: State.user.id, type: 'expense', accountId: fromAccountId, amount: fromAmount + (transferFee || 0), currency: fromCurrency, date: transferDate, description: `Transfer to ${toAccountName} ${description ? `(${description})` : ''}`, isTransfer: true, transferId, transferNumber: reminder.id, referenceNumber, transferFee, exchangeRateUsed: txDetails.exchangeRateUsed || 1, convertedAmount: txDetails.convertedAmount || toAmount, transferAmount: fromAmount, transferSide: 'source', status: 'completed', attachments: [], createdAt: Date.now() };
+      const incomeLeg = { id: uid('tx'), userId: State.user.id, type: 'income', accountId: toAccountId, amount: toAmount, currency: toCurrency, date: transferDate, description: `Transfer from ${fromAccountName} ${description ? `(${description})` : ''}`, isTransfer: true, transferId, transferNumber: reminder.id, referenceNumber, transferFee, exchangeRateUsed: txDetails.exchangeRateUsed || 1, convertedAmount: txDetails.convertedAmount || toAmount, transferAmount: fromAmount, transferSide: 'destination', status: 'completed', attachments: [], createdAt: Date.now() };
+
+      await DB.put('transactions', expenseLeg);
+      await DB.put('transactions', incomeLeg);
+      State.transactions.push(expenseLeg, incomeLeg);
+      await saveCurrencyHistoryEntry(buildCurrencyHistoryEntry({ transactionId: transferId, moduleName: 'Transfer', date: transferDate, transactionNumber: reminder.id, originalCurrency: fromCurrency, baseCurrency: toCurrency, exchangeRate: txDetails.exchangeRateUsed || 1, originalAmount: fromAmount, convertedAmount: txDetails.convertedAmount || toAmount, status: 'Completed', userId: State.user.id }));
+
+    } else {
+      // Handle standard income/expense reminder
+      const transactionRecord = {
+        id: uid('tx'),
+        userId: State.user.id,
+        ...txDetails,
+        date: new Date().toISOString().slice(0, 10),
+        attachments: [],
+        createdAt: Date.now(),
+      };
+      await DB.put('transactions', transactionRecord);
+      State.transactions.push(transactionRecord);
+    }
+
+    // Update reminder status and next due date
+    if (reminder.repeat === 'none') {
+      reminder.status = 'completed';
+    } else {
+      const newDueDate = new Date(reminder.nextDueDate);
+      const now = new Date();
+      while (newDueDate <= now) {
+        const { frequencyValue, frequencyUnit } = reminder;
+        if (frequencyUnit === 'days') newDueDate.setDate(newDueDate.getDate() + frequencyValue);
+        else if (frequencyUnit === 'weeks') newDueDate.setDate(newDueDate.getDate() + frequencyValue * 7);
+        else if (frequencyUnit === 'months') newDueDate.setMonth(newDueDate.getMonth() + frequencyValue);
+        else if (frequencyUnit === 'years') newDueDate.setFullYear(newDueDate.getFullYear() + frequencyValue);
+      }
+      reminder.nextDueDate = newDueDate.toISOString().slice(0, 10);
+    }
+
+    await DB.put('reminders', reminder);
+    showToast(`Transaction for "${reminder.title}" has been recorded.`);
+    renderView();
+
+  } catch (err) {
+    console.error('Failed to approve reminder:', err);
+    showToast('Error recording transaction.');
+  }
+}
+
+function emptyState(icon, title, sub) {
+  return `<div class="empty-state"><div class="big">${icon}</div><p><strong>${title}</strong><br>${sub}</p></div>`;
+}
+
+/* ================= TRANSFERS ================= */
+function renderTransfers() {
+  const transfers = getTransferGroups();
+  return `
+    <div style="display:flex; justify-content:flex-end; margin-bottom:16px;"><button class="btn btn-primary" id="add-transfer-btn">+ New Transfer</button></div>
+    <div class="filter-bar card" style="padding:14px 16px;">
+      <div class="field"><label>From</label><input type="date" id="transfer-from"></div>
+      <div class="field"><label>To</label><input type="date" id="transfer-to"></div>
+      <div class="field"><label>Status</label><select id="transfer-status"><option value="">All</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+    </div>
+    <div class="list-card card">
+      <div class="list-head"><h3>Inter-Account Transfers</h3></div>
+      ${transfers.length ? transfers.map(transferRowHtml).join('') : emptyState('🔄', 'No transfers yet', 'Create your first inter-account transfer to see it here.')}
+    </div>
+  `;
+}
+
+function transferRowHtml(t) {
+  const fromAccount = State.accounts.find((account) => account.id === t.sourceAccountId);
+  const toAccount = State.accounts.find((account) => account.id === t.destinationAccountId);
+  const statusClass = t.status === 'completed' ? 'pill-income' : (t.status === 'cancelled' ? 'pill-expense' : 'pill');
+  return `
+    <div class="tx-row" data-transfer-id="${t.id}">
+      <div class="ic" style="background:var(--info-soft); color:var(--info);">🔄</div>
+      <div class="info">
+        <div class="desc">${escapeHtml(t.description || `Transfer ${t.transferNumber || ''}`)}</div>
+        <div class="meta">${fromAccount ? escapeHtml(fromAccount.name) : 'Unknown'} → ${toAccount ? escapeHtml(toAccount.name) : 'Unknown'} · ${formatDateValue(t.date)} · Ref ${escapeHtml(t.referenceNumber || t.transferNumber || 'N/A')}</div>
+      </div>
+      <div class="amt mono">${fmt(t.transferAmount || 0, t.sourceCurrency || CurrencyUtil.defaultCode)}</div>
+      <div class="row-actions">
+        <button class="btn btn-icon btn-ghost btn-attach-transfer" title="Attachments">📎</button>
+        <span class="pill ${statusClass}">${escapeHtml(t.status || 'pending')}</span>
+      </div>
+    </div>`;
+}
+
+function afterRenderTransfers() {
+  document.querySelectorAll('.btn-attach-transfer').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      const id = event.target.closest('.tx-row').dataset.transferId;
+      const transfer = getTransferGroups().find((item) => item.id === id);
+      openAttachmentManager(transfer, transfer?.description || 'Transfer Attachments');
+    });
+  });
+  document.getElementById('add-transfer-btn').addEventListener('click', () => openTransferModal());
+  document.getElementById('transfer-from').addEventListener('change', renderTransferFilteredList);
+  document.getElementById('transfer-to').addEventListener('change', renderTransferFilteredList);
+  document.getElementById('transfer-status').addEventListener('change', renderTransferFilteredList);
+  renderTransferFilteredList();
+}
+
+function renderTransferFilteredList() {
+  const from = document.getElementById('transfer-from')?.value || '';
+  const to = document.getElementById('transfer-to')?.value || '';
+  const status = document.getElementById('transfer-status')?.value || '';
+  const transfers = getTransferGroups().filter((item) => {
+    const matchesFrom = !from || item.date >= from;
+    const matchesTo = !to || item.date <= to;
+    const matchesStatus = !status || (item.status || 'pending') === status;
+    return matchesFrom && matchesTo && matchesStatus;
+  });
+  const list = document.querySelector('.list-card .list-head')?.parentElement;
+  if (list) {
+    const body = list.querySelector('.list-head');
+    const rows = transfers.length ? transfers.map(transferRowHtml).join('') : emptyState('🔄', 'No transfers yet', 'Create your first inter-account transfer to see it here.');
+    list.innerHTML = `${body.outerHTML}${rows}`;
+  }
+}
+
+function openTransferModal(existing) {
+  State.pendingAttachments = existing?.attachments ? [...existing.attachments] : [];
+  const transferId = existing?.transferId || uid('trf');
+  const transferNumber = existing?.transferNumber || generateTransferNumber();
+  const accountOptions = State.accounts.map((account) => `<option value="${account.id}" ${existing?.sourceAccountId === account.id ? 'selected' : ''}>${escapeHtml(account.name)} (${account.type})</option>`).join('');
+  const currencyOptions = State.currencies.map((currency) => `<option value="${currency.code}" ${((existing?.sourceCurrency || CurrencyUtil.defaultCode) === currency.code ? 'selected' : '')}>${currency.code}</option>`).join('');
+  const destinationCurrencyOptions = State.currencies.map((currency) => `<option value="${currency.code}" ${((existing?.destinationCurrency || CurrencyUtil.defaultCode) === currency.code ? 'selected' : '')}>${currency.code}</option>`).join('');
+  const dateVal = existing?.date || new Date().toISOString().slice(0, 10);
+  openModal(`
+    <h3>${existing ? 'Edit Transfer' : 'New Inter-Account Transfer'}</h3>
+    <div class="form-grid">
+      <div class="two-col">
+        <div class="field"><label>Transfer Date</label><input type="date" id="transfer-date" value="${dateVal}"></div>
+        <div class="field"><label>Reference Number</label><input type="text" id="transfer-reference" value="${escapeHtml(existing?.referenceNumber || '')}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>From Account</label><select id="transfer-from-account">${accountOptions}</select></div>
+        <div class="field"><label>To Account</label><select id="transfer-to-account">${accountOptions.replace(`value="${existing?.sourceAccountId || ''}"`, `value="${existing?.sourceAccountId || ''}"`).replace(`value="${existing?.destinationAccountId || ''}"`, `value="${existing?.destinationAccountId || ''}" selected`)}</select></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Transfer Amount</label><input type="number" id="transfer-amount" min="0" step="0.01" value="${existing?.transferAmount || ''}"></div>
+        <div class="field"><label>Transfer Fee</label><input type="number" id="transfer-fee" min="0" step="0.01" value="${existing?.transferFee || ''}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Source Currency</label><select id="transfer-source-currency">${currencyOptions}</select></div>
+        <div class="field"><label>Destination Currency</label><select id="transfer-destination-currency">${destinationCurrencyOptions}</select></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Exchange Rate</label><input type="number" id="transfer-exchange-rate" min="0" step="0.0001" value="${existing?.exchangeRateUsed || 1}"></div>
+        <div class="field"><label>Converted Amount</label><input type="number" id="transfer-converted-amount" min="0" step="0.01" value="${existing?.convertedAmount || ''}"></div>
+      </div>
+      <div class="field"><label>Description</label><input type="text" id="transfer-description" value="${escapeHtml(existing?.description || '')}"></div>
+      <div class="field">
+        <label>Attachment</label>
+        <div class="attach-drop" id="transfer-attach-drop">Tap to add a file</div>
+        <input type="file" id="transfer-file" class="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,.zip,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip">
+        <div class="attach-list" id="transfer-attach-list"></div>
+      </div>
+      <div class="field"><label>Status</label><select id="transfer-status-select"><option value="pending" ${existing?.status === 'pending' ? 'selected' : ''}>Pending</option><option value="approved" ${existing?.status === 'approved' ? 'selected' : ''}>Approved</option><option value="completed" ${existing?.status === 'completed' ? 'selected' : ''}>Completed</option><option value="cancelled" ${existing?.status === 'cancelled' ? 'selected' : ''}>Cancelled</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="transfer-save">Save Transfer</button>
+    </div>
+  `);
+  const amountInput = document.getElementById('transfer-amount');
+  const exchangeRateInput = document.getElementById('transfer-exchange-rate');
+  const convertedInput = document.getElementById('transfer-converted-amount');
+  const sourceCurrencySelect = document.getElementById('transfer-source-currency');
+  const destinationCurrencySelect = document.getElementById('transfer-destination-currency');
+  const recalc = () => {
+    const amount = parseFloat(amountInput.value || '0');
+    const rate = parseFloat(exchangeRateInput.value || '0');
+    const fromCode = sourceCurrencySelect.value;
+    const toCode = destinationCurrencySelect.value;
+    if (fromCode === toCode) {
+      convertedInput.value = amount.toFixed(2);
+      return;
+    }
+    const fromCurrency = State.currencies.find((item) => item.code === fromCode);
+    const toCurrency = State.currencies.find((item) => item.code === toCode);
+    if (!fromCurrency || !toCurrency) {
+      convertedInput.value = '0.00';
+      return;
+    }
+    const calculated = rate > 0 ? amount * rate : amount;
+    convertedInput.value = calculated.toFixed(2);
+  };
+  amountInput.addEventListener('input', recalc);
+  exchangeRateInput.addEventListener('input', recalc);
+  sourceCurrencySelect.addEventListener('change', recalc);
+  destinationCurrencySelect.addEventListener('change', recalc);
+  const renderTransferAttachments = () => {
+    const box = document.getElementById('transfer-attach-list');
+    if (!box) return;
+    box.innerHTML = State.pendingAttachments.length ? State.pendingAttachments.map((attachment, index) => buildAttachmentActionHtml(attachment, index, 'attachments')).join('') : '<div class="empty-state" style="padding:0;"><p>No attachments yet.</p></div>';
+    box.querySelectorAll('[data-action]').forEach((button) => {
+      button.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const action = button.dataset.action;
+        const index = Number(button.dataset.index || 0);
+        await handleAttachmentAction(action, State.pendingAttachments, index, { id: existing?.transferId || null }, 'attachments');
+        renderTransferAttachments();
+      });
+    });
+  };
+  document.getElementById('transfer-attach-drop').addEventListener('click', () => document.getElementById('transfer-file').click());
+  document.getElementById('transfer-file').addEventListener('change', async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    for (const file of files) {
+      if (file.size > 8 * 1024 * 1024) { showToast(`${file.name} is too big (max 8MB)`); continue; }
+      const dataUrl = await fileToDataUrl(file);
+      State.pendingAttachments.push({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl, uploadedAt: new Date().toISOString(), uploadedBy: State.user?.username || 'System' });
+    }
+    renderTransferAttachments();
+    event.target.value = '';
+  });
+  renderTransferAttachments();
+  recalc();
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('transfer-save').addEventListener('click', async () => {
+    const transferDate = document.getElementById('transfer-date').value;
+    const referenceNumber = document.getElementById('transfer-reference').value.trim();
+    const fromAccountId = document.getElementById('transfer-from-account').value;
+    const toAccountId = document.getElementById('transfer-to-account').value;
+    const transferAmount = parseFloat(document.getElementById('transfer-amount').value);
+    const transferFee = parseFloat(document.getElementById('transfer-fee').value || '0');
+    const sourceCurrency = document.getElementById('transfer-source-currency').value;
+    const destinationCurrency = document.getElementById('transfer-destination-currency').value;
+    const exchangeRateUsed = parseFloat(document.getElementById('transfer-exchange-rate').value);
+    const convertedAmount = parseFloat(document.getElementById('transfer-converted-amount').value);
+    const description = document.getElementById('transfer-description').value.trim();
+    const status = document.getElementById('transfer-status-select').value;
+    if (!transferDate || !fromAccountId || !toAccountId || !sourceCurrency || !destinationCurrency) { showToast('Please complete all required transfer fields'); return; }
+    if (fromAccountId === toAccountId) { showToast('Transfers to the same account are not allowed'); return; }
+    if (!transferAmount || transferAmount <= 0) { showToast('Transfer amount must be greater than zero'); return; }
+    if (!exchangeRateUsed || exchangeRateUsed <= 0) { showToast('Exchange rate must be greater than zero'); return; }
+    const fromAccount = State.accounts.find((account) => account.id === fromAccountId);
+    const toAccount = State.accounts.find((account) => account.id === toAccountId);
+    if (!fromAccount || !toAccount) { showToast('Please choose valid accounts'); return; }
+    const fromBalance = getAccountBalance(fromAccountId);
+    const sourceAmountInDefault = toDefault(transferAmount, sourceCurrency);
+    const transferWouldReduceBalance = fromBalance - sourceAmountInDefault < 0;
+    if (transferWouldReduceBalance && !fromAccount.allowOverdraft) { showToast('Insufficient funds for this transfer'); return; }
+    const resolvedTransferNumber = transferNumber || generateTransferNumber();
+    const transferId = existing?.transferId || uid('trf');
+    const existingTransfer = State.transactions.find((transaction) => transaction.isTransfer && transaction.transferNumber === resolvedTransferNumber && transaction.transferId !== transferId);
+    if (existingTransfer) { showToast('Duplicate transfer number detected'); return; }
+    const sourceLeg = {
+      id: existing?.sourceLeg?.id || uid('tx'),
+      userId: State.user.id,
+      type: 'expense',
+      accountId: fromAccountId,
+      amount: transferAmount + transferFee,
+      currency: sourceCurrency,
+      date: transferDate,
+      description: description || `Transfer to ${toAccount?.name || 'destination'}`,
+      isTransfer: true,
+      transferId,
+      transferNumber: resolvedTransferNumber,
+      referenceNumber,
+      transferFee,
+      exchangeRateUsed,
+      convertedAmount,
+      transferAmount,
+      transferSide: 'source',
+      status,
+      attachments: State.pendingAttachments,
+      createdAt: existing?.sourceLeg?.createdAt || Date.now(),
+    };
+    const destinationLeg = {
+      id: existing?.destinationLeg?.id || uid('tx'),
+      userId: State.user.id,
+      type: 'income',
+      accountId: toAccountId,
+      amount: convertedAmount || transferAmount,
+      currency: destinationCurrency,
+      date: transferDate,
+      description: description || `Transfer from ${fromAccount?.name || 'source'}`,
+      isTransfer: true,
+      transferId,
+      transferNumber: resolvedTransferNumber,
+      referenceNumber,
+      transferFee,
+      exchangeRateUsed,
+      convertedAmount,
+      transferAmount,
+      transferSide: 'destination',
+      status,
+      attachments: State.pendingAttachments,
+      createdAt: existing?.destinationLeg?.createdAt || Date.now(),
+    };
+    await DB.put('transactions', sourceLeg);
+    await DB.put('transactions', destinationLeg);
+    State.transactions = State.transactions.filter((transaction) => transaction.transferId !== transferId && transaction.id !== sourceLeg.id && transaction.id !== destinationLeg.id).concat(sourceLeg, destinationLeg);
+    const previousStatus = existing?.status || 'pending';
+    const transferMeta = { id: transferId, userId: State.user.id, transferNumber: resolvedTransferNumber, referenceNumber, date: transferDate, description, transferAmount, sourceAccountId: fromAccountId, destinationAccountId: toAccountId, sourceCurrency, destinationCurrency, exchangeRateUsed, convertedAmount, transferFee, status, createdAt: Date.now() };
+    if (previousStatus !== status) {
+      recordAuditEvent('transfer_status_changed', { transferId, transferNumber: resolvedTransferNumber, fromStatus: previousStatus, toStatus: status, reason: description || 'No reason provided' });
+    }
+    const historyEntry = buildCurrencyHistoryEntry({
+      id: uid('ch'),
+      transactionId: transferId,
+      moduleName: 'Transfer',
+      date: transferDate,
+      transactionNumber: resolvedTransferNumber,
+      originalCurrency: sourceCurrency,
+      baseCurrency: destinationCurrency,
+      exchangeRate: exchangeRateUsed,
+      originalAmount: transferAmount,
+      convertedAmount: convertedAmount || transferAmount,
+      status,
+      userId: State.user.id,
+    });
+    await saveCurrencyHistoryEntry(historyEntry);
+    closeModal();
+    renderView();
+    showToast('Transfer saved');
+  });
+}
+
+function renderLoans() {
+  const rows = State.loans.length ? State.loans.map((loan) => `
+    <div class="tx-row" data-id="${loan.id}">
+      <div class="ic" style="background:var(--gold-soft); color:var(--gold);">🏛️</div>
+      <div class="info">
+        <div class="desc">${escapeHtml(loan.name || 'Loan')}</div>
+        <div class="meta">${escapeHtml(loan.borrower || '')} · ${escapeHtml(loan.status || 'Draft')} · Balance ${fmt(loan.remainingBalance || 0, loan.loanCurrency || CurrencyUtil.defaultCode)}</div>
+      </div>
+      <div class="row-actions">
+        <button class="btn btn-icon btn-ghost btn-edit-loan" title="Edit">✏️</button>
+        <button class="btn btn-icon btn-ghost btn-del-loan" title="Delete">🗑️</button>
+      </div>
+    </div>
+  `).join('') : emptyState('🏛️', 'No loans yet', 'Add your first loan to track repayments.');
+  return `
+    <div style="display:flex; justify-content:flex-end; margin-bottom:16px;"><button class="btn btn-primary" id="add-loan-btn">+ Add Loan</button></div>
+    <div class="list-card card"><div class="list-head"><h3>Loans</h3></div>${rows}</div>
+  `;
+}
+
+function afterRenderLoans() {
+  document.getElementById('add-loan-btn').addEventListener('click', () => openLoanModal());
+  document.querySelectorAll('.btn-edit-loan').forEach((btn) => btn.addEventListener('click', (event) => {
+    const id = event.target.closest('.tx-row').dataset.id;
+    openLoanModal(State.loans.find((loan) => loan.id === id));
+  }));
+  document.querySelectorAll('.btn-del-loan').forEach((btn) => btn.addEventListener('click', async (event) => {
+    const id = event.target.closest('.tx-row').dataset.id;
+    if (!confirm('Delete this loan?')) return;
+    await DB.delete('loans', id);
+    State.loans = State.loans.filter((loan) => loan.id !== id);
+    renderView();
+    showToast('Loan deleted');
+  }));
+}
+
+function openLoanModal(existing) {
+  const accountOptions = State.accounts.map((account) => `<option value="${account.id}" ${existing?.loanAccountId === account.id ? 'selected' : ''}>${escapeHtml(account.name)}</option>`).join('');
+  const currencyOptions = State.currencies.map((currency) => `<option value="${currency.code}" ${((existing?.loanCurrency || getPreferredCurrencyCode()) === currency.code ? 'selected' : '')}>${currency.code}</option>`).join('');
+  openModal(`
+    <h3>${existing ? 'Edit Loan' : 'Add Loan'}</h3>
+    <div class="form-grid">
+      <div class="two-col">
+        <div class="field"><label>Loan Name</label><input type="text" id="loan-name" value="${escapeHtml(existing?.name || '')}"></div>
+        <div class="field"><label>Loan Number</label><input type="text" id="loan-number" value="${escapeHtml(existing?.loanNumber || '')}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Lender</label><input type="text" id="loan-lender" value="${escapeHtml(existing?.lender || '')}"></div>
+        <div class="field"><label>Borrower</label><input type="text" id="loan-borrower" value="${escapeHtml(existing?.borrower || '')}"></div>
+      </div>
+      <div class="field"><label>Loan Account</label><select id="loan-account">${accountOptions}</select></div>
+      <div class="two-col">
+        <div class="field"><label>Principal Amount</label><input type="number" id="loan-principal" value="${existing?.principalAmount || ''}"></div>
+        <div class="field"><label>Interest Rate</label><input type="number" id="loan-interest-rate" value="${existing?.interestRate || ''}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Currency</label><select id="loan-currency">${currencyOptions}</select></div>
+        <div class="field"><label>Exchange Rate</label><input type="number" id="loan-exchange-rate" value="${existing?.exchangeRate || 1}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>EMI Amount</label><input type="number" id="loan-emi" value="${existing?.emiAmount || ''}"></div>
+        <div class="field"><label>Status</label><select id="loan-status"><option value="Draft" ${existing?.status === 'Draft' ? 'selected' : ''}>Draft</option><option value="Pending" ${existing?.status === 'Pending' ? 'selected' : ''}>Pending</option><option value="Approved" ${existing?.status === 'Approved' ? 'selected' : ''}>Approved</option><option value="Completed" ${existing?.status === 'Completed' ? 'selected' : ''}>Completed</option><option value="Cancelled" ${existing?.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option></select></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Start Date</label><input type="date" id="loan-start-date" value="${existing?.startDate || ''}"></div>
+        <div class="field"><label>End Date</label><input type="date" id="loan-end-date" value="${existing?.endDate || ''}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Next Due Date</label><input type="date" id="loan-next-due" value="${existing?.nextDueDate || ''}"></div>
+        <div class="field"><label>Remaining Balance</label><input type="number" id="loan-remaining-balance" value="${existing?.remainingBalance || existing?.principalAmount || ''}"></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="loan-notes">${escapeHtml(existing?.notes || '')}</textarea></div>
+      <div class="field"><label>Attachment</label><div class="attach-drop" id="loan-attach-drop">Tap to add a file</div><input type="file" id="loan-file" class="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,.zip"><div class="attach-list" id="loan-attach-list"></div></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="modal-cancel">Cancel</button><button class="btn btn-primary" id="loan-save">Save</button></div>
+  `);
+  State.pendingAttachments = existing?.attachments ? [...existing.attachments] : [];
+  const renderLoanAttachments = () => {
+    const box = document.getElementById('loan-attach-list');
+    if (!box) return;
+    box.innerHTML = State.pendingAttachments.length ? State.pendingAttachments.map((attachment, index) => buildAttachmentActionHtml(attachment, index, 'attachments')).join('') : '<div class="empty-state" style="padding:0;"><p>No attachments yet.</p></div>';
+    box.querySelectorAll('[data-action]').forEach((button) => {
+      button.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const action = button.dataset.action;
+        const index = Number(button.dataset.index || 0);
+        await handleAttachmentAction(action, State.pendingAttachments, index, existing || { id: null }, 'attachments');
+        renderLoanAttachments();
+      });
+    });
+  };
+  document.getElementById('loan-attach-drop').addEventListener('click', () => document.getElementById('loan-file').click());
+  document.getElementById('loan-file').addEventListener('change', async (event) => {
+    const files = Array.from(event.target.files || []);
+    for (const file of files) {
+      const dataUrl = await fileToDataUrl(file);
+      State.pendingAttachments.push({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl, uploadedAt: new Date().toISOString(), uploadedBy: State.user?.username || 'System' });
+    }
+    renderLoanAttachments();
+    event.target.value = '';
+  });
+  renderLoanAttachments();
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('loan-save').addEventListener('click', async () => {
+    const record = {
+      id: existing?.id || uid('loan'),
+      userId: State.user.id,
+      name: document.getElementById('loan-name').value.trim(),
+      loanNumber: document.getElementById('loan-number').value.trim(),
+      lender: document.getElementById('loan-lender').value.trim(),
+      borrower: document.getElementById('loan-borrower').value.trim(),
+      loanAccountId: document.getElementById('loan-account').value,
+      principalAmount: parseFloat(document.getElementById('loan-principal').value) || 0,
+      interestRate: parseFloat(document.getElementById('loan-interest-rate').value) || 0,
+      loanCurrency: document.getElementById('loan-currency').value,
+      exchangeRate: parseFloat(document.getElementById('loan-exchange-rate').value) || 1,
+      emiAmount: parseFloat(document.getElementById('loan-emi').value) || 0,
+      startDate: document.getElementById('loan-start-date').value,
+      endDate: document.getElementById('loan-end-date').value,
+      nextDueDate: document.getElementById('loan-next-due').value,
+      remainingBalance: parseFloat(document.getElementById('loan-remaining-balance').value) || 0,
+      status: document.getElementById('loan-status').value,
+      notes: document.getElementById('loan-notes').value.trim(),
+      attachments: State.pendingAttachments,
+      createdAt: existing?.createdAt || Date.now(),
+    };
+    await DB.put('loans', record);
+    State.loans = State.loans.filter((loan) => loan.id !== record.id).concat(record);
+    closeModal(); renderView(); showToast('Loan saved');
+  });
+}
+
+function renderInvestments() {
+  const rows = State.investments.length ? State.investments.map((investment) => `
+    <div class="tx-row" data-id="${investment.id}">
+      <div class="ic" style="background:var(--accent-soft); color:var(--accent);">📈</div>
+      <div class="info">
+        <div class="desc">${escapeHtml(investment.name || 'Investment')}</div>
+        <div class="meta">${escapeHtml(investment.investmentType || '')} · ${escapeHtml(investment.status || 'Draft')} · ${fmt(investment.currentValue || investment.purchaseAmount || 0, investment.currency || CurrencyUtil.defaultCode)}</div>
+      </div>
+      <div class="row-actions">
+        <button class="btn btn-icon btn-ghost btn-edit-investment" title="Edit">✏️</button>
+        <button class="btn btn-icon btn-ghost btn-del-investment" title="Delete">🗑️</button>
+      </div>
+    </div>
+  `).join('') : emptyState('📈', 'No investments yet', 'Add your first investment to track growth and maturity.');
+  return `
+    <div style="display:flex; justify-content:flex-end; margin-bottom:16px;"><button class="btn btn-primary" id="add-investment-btn">+ Add Investment</button></div>
+    <div class="list-card card"><div class="list-head"><h3>Investments</h3></div>${rows}</div>
+  `;
+}
+
+function afterRenderInvestments() {
+  document.getElementById('add-investment-btn').addEventListener('click', () => openInvestmentModal());
+  document.querySelectorAll('.btn-edit-investment').forEach((btn) => btn.addEventListener('click', (event) => {
+    const id = event.target.closest('.tx-row').dataset.id;
+    openInvestmentModal(State.investments.find((investment) => investment.id === id));
+  }));
+  document.querySelectorAll('.btn-del-investment').forEach((btn) => btn.addEventListener('click', async (event) => {
+    const id = event.target.closest('.tx-row').dataset.id;
+    if (!confirm('Delete this investment?')) return;
+    await DB.delete('investments', id);
+    State.investments = State.investments.filter((investment) => investment.id !== id);
+    renderView();
+    showToast('Investment deleted');
+  }));
+}
+
+function openInvestmentModal(existing) {
+  const accountOptions = State.accounts.map((account) => `<option value="${account.id}" ${existing?.investmentAccountId === account.id ? 'selected' : ''}>${escapeHtml(account.name)}</option>`).join('');
+  const currencyOptions = State.currencies.map((currency) => `<option value="${currency.code}" ${((existing?.currency || getPreferredCurrencyCode()) === currency.code ? 'selected' : '')}>${currency.code}</option>`).join('');
+  openModal(`
+    <h3>${existing ? 'Edit Investment' : 'Add Investment'}</h3>
+    <div class="form-grid">
+      <div class="two-col">
+        <div class="field"><label>Investment Name</label><input type="text" id="investment-name" value="${escapeHtml(existing?.name || '')}"></div>
+        <div class="field"><label>Investment Type</label><select id="investment-type"><option value="Fixed Deposit" ${existing?.investmentType === 'Fixed Deposit' ? 'selected' : ''}>Fixed Deposit</option><option value="Recurring Deposit" ${existing?.investmentType === 'Recurring Deposit' ? 'selected' : ''}>Recurring Deposit</option><option value="Stocks" ${existing?.investmentType === 'Stocks' ? 'selected' : ''}>Stocks</option><option value="Mutual Funds" ${existing?.investmentType === 'Mutual Funds' ? 'selected' : ''}>Mutual Funds</option><option value="Gold" ${existing?.investmentType === 'Gold' ? 'selected' : ''}>Gold</option><option value="Crypto" ${existing?.investmentType === 'Crypto' ? 'selected' : ''}>Crypto</option><option value="Bonds" ${existing?.investmentType === 'Bonds' ? 'selected' : ''}>Bonds</option><option value="Savings Certificates" ${existing?.investmentType === 'Savings Certificates' ? 'selected' : ''}>Savings Certificates</option><option value="Real Estate" ${existing?.investmentType === 'Real Estate' ? 'selected' : ''}>Real Estate</option></select></div>
+      </div>
+      <div class="field"><label>Investment Account</label><select id="investment-account">${accountOptions}</select></div>
+      <div class="two-col">
+        <div class="field"><label>Currency</label><select id="investment-currency">${currencyOptions}</select></div>
+        <div class="field"><label>Exchange Rate</label><input type="number" id="investment-exchange-rate" value="${existing?.exchangeRate || 1}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Purchase Amount</label><input type="number" id="investment-purchase-amount" value="${existing?.purchaseAmount || ''}"></div>
+        <div class="field"><label>Current Value</label><input type="number" id="investment-current-value" value="${existing?.currentValue || ''}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Profit</label><input type="number" id="investment-profit" value="${existing?.profit || ''}"></div>
+        <div class="field"><label>Loss</label><input type="number" id="investment-loss" value="${existing?.loss || ''}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Purchase Date</label><input type="date" id="investment-purchase-date" value="${existing?.purchaseDate || ''}"></div>
+        <div class="field"><label>Maturity Date</label><input type="date" id="investment-maturity-date" value="${existing?.maturityDate || ''}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Interest Rate</label><input type="number" id="investment-interest-rate" value="${existing?.interestRate || ''}"></div>
+        <div class="field"><label>Dividend</label><input type="number" id="investment-dividend" value="${existing?.dividend || ''}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Status</label><select id="investment-status"><option value="Active" ${existing?.status === 'Active' ? 'selected' : ''}>Active</option><option value="Matured" ${existing?.status === 'Matured' ? 'selected' : ''}>Matured</option><option value="Sold" ${existing?.status === 'Sold' ? 'selected' : ''}>Sold</option></select></div>
+        <div class="field"><label>Attachment</label><div class="attach-drop" id="investment-attach-drop">Tap to add a file</div><input type="file" id="investment-file" class="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,.zip"><div class="attach-list" id="investment-attach-list"></div></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="investment-notes">${escapeHtml(existing?.notes || '')}</textarea></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="modal-cancel">Cancel</button><button class="btn btn-primary" id="investment-save">Save</button></div>
+  `);
+  State.pendingAttachments = existing?.attachments ? [...existing.attachments] : [];
+  const renderInvestmentAttachments = () => {
+    const box = document.getElementById('investment-attach-list');
+    if (!box) return;
+    box.innerHTML = State.pendingAttachments.length ? State.pendingAttachments.map((attachment, index) => buildAttachmentActionHtml(attachment, index, 'attachments')).join('') : '<div class="empty-state" style="padding:0;"><p>No attachments yet.</p></div>';
+    box.querySelectorAll('[data-action]').forEach((button) => {
+      button.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const action = button.dataset.action;
+        const index = Number(button.dataset.index || 0);
+        await handleAttachmentAction(action, State.pendingAttachments, index, existing || { id: null }, 'attachments');
+        renderInvestmentAttachments();
+      });
+    });
+  };
+  document.getElementById('investment-attach-drop').addEventListener('click', () => document.getElementById('investment-file').click());
+  document.getElementById('investment-file').addEventListener('change', async (event) => {
+    const files = Array.from(event.target.files || []);
+    for (const file of files) {
+      const dataUrl = await fileToDataUrl(file);
+      State.pendingAttachments.push({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl, uploadedAt: new Date().toISOString(), uploadedBy: State.user?.username || 'System' });
+    }
+    renderInvestmentAttachments();
+    event.target.value = '';
+  });
+  renderInvestmentAttachments();
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('investment-save').addEventListener('click', async () => {
+    const record = {
+      id: existing?.id || uid('inv'),
+      userId: State.user.id,
+      name: document.getElementById('investment-name').value.trim(),
+      investmentType: document.getElementById('investment-type').value,
+      investmentAccountId: document.getElementById('investment-account').value,
+      currency: document.getElementById('investment-currency').value,
+      exchangeRate: parseFloat(document.getElementById('investment-exchange-rate').value) || 1,
+      purchaseAmount: parseFloat(document.getElementById('investment-purchase-amount').value) || 0,
+      currentValue: parseFloat(document.getElementById('investment-current-value').value) || 0,
+      profit: parseFloat(document.getElementById('investment-profit').value) || 0,
+      loss: parseFloat(document.getElementById('investment-loss').value) || 0,
+      purchaseDate: document.getElementById('investment-purchase-date').value,
+      maturityDate: document.getElementById('investment-maturity-date').value,
+      interestRate: parseFloat(document.getElementById('investment-interest-rate').value) || 0,
+      dividend: parseFloat(document.getElementById('investment-dividend').value) || 0,
+      status: document.getElementById('investment-status').value,
+      notes: document.getElementById('investment-notes').value.trim(),
+      attachments: State.pendingAttachments,
+      createdAt: existing?.createdAt || Date.now(),
+    };
+    await DB.put('investments', record);
+    State.investments = State.investments.filter((investment) => investment.id !== record.id).concat(record);
+    closeModal(); renderView(); showToast('Investment saved');
+  });
+}
+
+function renderReports() {
+  const currencyOptions = State.currencies.map((c) => `<option value="${c.code}" ${getPreferredCurrencyCode() === c.code ? 'selected' : ''}>${c.code} — ${c.name}</option>`).join('');
+  return `
+    <div class="filter-bar card" style="padding:14px 16px;">
+      <div class="field"><label>From</label><input type="date" id="rep-from" value="${State.filters.from}"></div>
+      <div class="field"><label>To</label><input type="date" id="rep-to" value="${State.filters.to}"></div>
+      <div class="field"><label>Show In</label><select id="rep-currency">${currencyOptions}</select></div>
+      <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+        <button class="btn btn-ghost btn-sm" id="report-export-csv">Export CSV</button>
+        <button class="btn btn-ghost btn-sm" id="report-export-pdf">Export PDF</button>
+        <button class="btn btn-primary btn-sm" id="report-print">Print</button>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card card"><h3>Money In vs Money Out</h3><canvas id="rep-bar"></canvas></div>
+      <div class="chart-card card"><h3>Spending by Group</h3><canvas id="rep-pie"></canvas></div>
+    </div>
+    <div class="chart-card card"><h3>Trend</h3><canvas id="rep-line"></canvas></div>
+    <div class="chart-card card" style="margin-top:16px;"><h3>Transfer Report</h3>
+      <div class="list-card" style="padding:0; box-shadow:none; border:none;">
+        ${renderTransferReportRows()}
+      </div>
+    </div>
+  `;
+}
+
+function renderTransferReportRows() {
+  const transfers = getFilteredTransfers();
+  if (!transfers.length) return emptyState('🔄', 'No transfer activity', 'Inter-account transfer activity will appear here.');
+  return transfers.map((item) => `
+    <div class="tx-row" data-transfer-id="${item.id}">
+      <div class="ic" style="background:var(--info-soft); color:var(--info);">🔄</div>
+      <div class="info">
+        <div class="desc">${escapeHtml(item.description || `Transfer ${item.transferNumber || ''}`)}</div>
+        <div class="meta">${formatDateValue(item.date)} · Ref ${escapeHtml(item.referenceNumber || item.transferNumber || 'N/A')} · ${escapeHtml(item.sourceCurrency || '')} → ${escapeHtml(item.destinationCurrency || '')}</div>
+      </div>
+      <div class="amt mono">${fmt(item.transferAmount || 0, item.sourceCurrency || CurrencyUtil.defaultCode)}</div>
+    </div>
+  `).join('');
+}
+
+function afterRenderReports() {
+  const currencySel = document.getElementById('rep-currency');
+  currencySel.value = getPreferredCurrencyCode();
+  const rerun = () => {
+    renderReportCharts(document.getElementById('rep-from').value, document.getElementById('rep-to').value, currencySel.value);
+    const transferContainer = document.querySelector('.chart-card .list-card');
+    if (transferContainer) {
+      transferContainer.innerHTML = renderTransferReportRows();
+    }
+  };
+  document.getElementById('rep-from').addEventListener('change', rerun);
+  document.getElementById('rep-to').addEventListener('change', rerun);
+  currencySel.addEventListener('change', rerun);
+  document.getElementById('report-export-csv').addEventListener('click', exportFilteredReportCsv);
+  document.getElementById('report-export-pdf').addEventListener('click', exportFilteredReportPdf);
+  document.getElementById('report-print').addEventListener('click', printFilteredReport);
+  rerun();
+}
+
+function exportFilteredReportCsv() {
+  const from = document.getElementById('rep-from').value;
+  const to = document.getElementById('rep-to').value;
+  const rows = [['Date', 'Description', 'Type', 'Amount', 'Currency']];
+  const filtered = State.transactions.filter((t) => !t.isTransfer && (!from || t.date >= from) && (!to || t.date <= to));
+  filtered.forEach((t) => rows.push([t.date, t.description || '', t.type, t.amount, t.currency]));
+  const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'filtered-report.csv';
+  a.click();
+  showToast('Filtered report exported');
+}
+
+function exportFilteredReportPdf() {
+  if (typeof jspdf === 'undefined' || typeof jspdf.jsPDF.autoTable === 'undefined') {
+    showToast('PDF library not loaded.');
+    return;
+  }
+  const { jsPDF } = jspdf;
+  const doc = new jsPDF();
+  const from = document.getElementById('rep-from').value;
+  const to = document.getElementById('rep-to').value;
+  const filtered = State.transactions.filter((t) => !t.isTransfer && (!from || t.date >= from) && (!to || t.date <= to));
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('Filtered Report', 14, 18);
+  doc.setFontSize(10);
+  doc.text(`Period: ${from || 'start'} to ${to || 'end'}`, 14, 28);
+  const body = filtered.map((t) => [t.date, t.description || '', t.type, fmt(t.amount, t.currency)]);
+  doc.autoTable({ startY: 36, head: [['Date', 'Description', 'Type', 'Amount']], body });
+  doc.save('filtered-report.pdf');
+  showToast('Filtered report exported');
+}
+
+function printFilteredReport() {
+  const from = document.getElementById('rep-from').value;
+  const to = document.getElementById('rep-to').value;
+  const filtered = State.transactions.filter((t) => !t.isTransfer && (!from || t.date >= from) && (!to || t.date <= to));
+  const printWindow = window.open('', '_blank', 'width=900,height=700');
+  printWindow.document.write(`<html><head><title>Filtered Report</title><style>body{font-family:Arial,sans-serif;padding:24px}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}</style></head><body><h2>Filtered Report</h2><p>Period: ${from || 'start'} to ${to || 'end'}</p><table><thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr></thead><tbody>${filtered.map((t) => `<tr><td>${t.date}</td><td>${escapeHtml(t.description || '')}</td><td>${t.type}</td><td>${fmt(t.amount, t.currency)}</td></tr>`).join('')}</tbody></table></body></html>`);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+
+function renderReportCharts(from, to, toCode) {
+  const allNonTransferTxs = State.transactions.filter(t => !t.isTransfer);
+  let periodList = allNonTransferTxs;
+  if (from) periodList = periodList.filter((t) => t.date >= from);
+  if (to) periodList = periodList.filter((t) => t.date <= to);
+  const months = [...new Set(periodList.map((t) => monthKey(t.date)))].sort();
+  const finalMonths = months.length ? months : (from ? [monthKey(from)] : [monthKey(new Date())]);
+  const incomeData = finalMonths.map((mk) => periodList.filter((t) => t.type === 'income' && monthKey(t.date) === mk).reduce((s, t) => s + getTransactionValue(t, toCode), 0));
+  const expenseData = finalMonths.map((mk) => periodList.filter((t) => t.type === 'expense' && monthKey(t.date) === mk).reduce((s, t) => s + getTransactionValue(t, toCode), 0));
+  renderIncomeExpenseBar('rep-bar', finalMonths.map(monthLabel), incomeData, expenseData);
+  const expenseGroups = State.groups.filter((g) => g.type === 'expense');
+  const pieLabels = [], pieData = [], pieColors = [];
+  expenseGroups.forEach((g) => {
+    const sum = periodList.filter((t) => t.type === 'expense' && t.groupId === g.id).reduce((s, t) => s + getTransactionValue(t, toCode), 0);
+    if (sum > 0) { pieLabels.push(g.name); pieData.push(Number(sum.toFixed(2))); pieColors.push(g.color); }
+  });
+  renderGroupPie('rep-pie', pieLabels, pieData, pieColors);
+  let running = 0;
+  if (from) {
+    const beforeStart = allNonTransferTxs.filter(t => t.date < from);
+    running = beforeStart.reduce((total, t) => {
+      const val = getTransactionValue(t, toCode);
+      return total + (t.type === 'income' ? val : -val);
+    }, 0);
+  }
+  const lineData = finalMonths.map((mk, i) => {
+    running += (incomeData[i] || 0) - (expenseData[i] || 0);
+    return Number(running.toFixed(2));
+  });
+  renderTrendLine('rep-line', finalMonths.map(monthLabel), lineData);
+}
+
+/* ================= Transaction row + list ================= */
+function txRowHtml(t) {
+  const g = t.isTransfer ? null : groupById(t.groupId);
+  const account = State.accounts.find(a => a.id === t.accountId);
+  const sign = t.type === 'income' ? '+' : '-';
+  const cls = t.type === 'income' ? 'pos' : 'neg';
+  const icon = t.isTransfer ? '🔄' : (g ? g.icon : '❓');
+  const color = t.isTransfer ? 'var(--info)' : (g ? g.color : '#666');
+  const bgColor = t.isTransfer ? 'var(--info-soft)' : (g ? g.color + '22' : '#ddd');
+
+  let metaParts = [];
+  if (t.isTransfer) {
+    metaParts.push('Account Transfer');
+  } else {
+    metaParts.push(g ? g.name : 'No Group');
+  }
+  
+  if (t.referenceNumber) {
+    metaParts.push(`Ref: ${t.referenceNumber}`);
+  }
+
+  if (account && State.view !== 'account-details') {
+    metaParts.push(account.name);
+  }
+
+  metaParts.push(formatDateValue(t.date));
+
+  let metaHtml = metaParts.join(' · ');
+  if (t.attachments?.length) {
+    metaHtml += ` <span class="attach-badge">📎 ${t.attachments.length}</span>`;
+  }
+
+  return `
+    <div class="tx-row" data-id="${t.id}">
+      <div class="ic" style="background:${bgColor}; color:${color};">${icon}</div>
+      <div class="info">
+        <div class="desc">${escapeHtml(t.description || (g ? g.name : 'Transaction'))}</div>
+        <div class="meta">${metaHtml}</div>
+      </div>
+      <div class="amt mono ${cls}">${sign}${fmt(t.amount, t.currency)}</div>
+      <div class="row-actions">
+        <button class="btn btn-icon btn-ghost btn-attach-tx" title="Attachments">📎</button>
+        <button class="btn btn-icon btn-ghost btn-edit-tx" title="Edit" ${t.isTransfer ? 'disabled' : ''}>✏️</button>
+        <button class="btn btn-icon btn-ghost btn-del-tx" title="Delete">🗑️</button>
+      </div>
+    </div>`;
+}
+
+function wireTxRowButtons() {
+  document.querySelectorAll('.btn-attach-tx').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.closest('.tx-row').dataset.id;
+      const tx = State.transactions.find((t) => t.id === id);
+      openAttachmentManager(tx, tx.description || 'Attachments');
+    });
+  });
+  document.querySelectorAll('.btn-edit-tx').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.closest('.tx-row').dataset.id;
+      const tx = State.transactions.find((t) => t.id === id);
+      if (tx.isTransfer) {
+        showToast('Editing transfers is not supported. Please delete and create a new one.');
+        return;
+      }
+      openTxModal(tx);
+    });
+  });
+  document.querySelectorAll('.btn-del-tx').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.closest('.tx-row').dataset.id;
+      const txToDelete = State.transactions.find((t) => t.id === id);
+
+      if (txToDelete.isTransfer) {
+        if (!confirm('This is part of a transfer. Deleting it will also delete the other part. Continue?')) return;
+        const otherLeg = State.transactions.find(t => t.transferId === txToDelete.transferId && t.id !== txToDelete.id);
+        await DB.delete('transactions', txToDelete.id);
+        if (otherLeg) await DB.delete('transactions', otherLeg.id);
+        State.transactions = State.transactions.filter(t => t.transferId !== txToDelete.transferId);
+        State.currencyHistory = State.currencyHistory.filter((entry) => entry.transactionId !== txToDelete.transferId && entry.transactionNumber !== txToDelete.transferNumber);
+        await Promise.all(State.currencyHistory.filter((entry) => entry.transactionId === txToDelete.transferId || entry.transactionNumber === txToDelete.transferNumber).map((entry) => DB.delete('currency_history', entry.id)));
+        showToast('Transfer deleted');
+        renderView();
+      } else {
+        if (!confirm('Delete this transaction? This cannot be undone.')) return;
+        await DB.delete('transactions', id);
+        State.transactions = State.transactions.filter((t) => t.id !== id);
+        showToast('Transaction deleted');
+        renderView();
+      }
+    });
+  });
+}
+
+function getFilteredTxList(type) {
+  const label = type === 'income' ? 'Income' : 'Expenses';
+  const groupsOfType = State.groups.filter((g) => g.type === type);
+  let list = State.transactions.filter((t) => t.type === type && !t.isTransfer);
+
+  if (State.filters.from) list = list.filter((t) => t.date >= State.filters.from);
+  if (State.filters.to) list = list.filter((t) => t.date <= State.filters.to);
+  if (State.filters.groupId) list = list.filter((t) => t.groupId === State.filters.groupId);
+  if (State.search) list = list.filter((t) => (t.description || '').toLowerCase().includes(State.search) || (groupById(t.groupId)?.name || '').toLowerCase().includes(State.search));
+
+  list.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return list;
+}
+
+function renderTxList(type) {
+  const label = type === 'income' ? 'Income' : 'Expenses';
+  const groupsOfType = State.groups.filter((g) => g.type === type);
+  const list = getFilteredTxList(type);
+  const total = totalsInDefault(list)[type === 'income' ? 'income' : 'expense'];
+
+  return `
+    <div class="filter-bar card" style="padding:14px 16px;">
+      <div class="field"><label>From</label><input type="date" id="filter-from" value="${State.filters.from}"></div>
+      <div class="field"><label>To</label><input type="date" id="filter-to" value="${State.filters.to}"></div>
+      <div class="field">
+        <label>Group</label>
+        <select id="filter-group">
+          <option value="">All Groups</option>
+          ${groupsOfType.map((g) => `<option value="${g.id}" ${State.filters.groupId === g.id ? 'selected' : ''}>${g.icon} ${g.name}</option>`).join('')}
+        </select>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+        <button class="btn btn-ghost btn-sm" id="clear-filters">Clear</button>
+        <button class="btn btn-ghost btn-sm" id="export-csv">Export CSV</button>
+        <button class="btn btn-primary btn-sm" id="export-pdf">Export PDF</button>
+      </div>
+    </div>
+    <div class="list-card card">
+      <div class="list-head">
+        <h3>${label} List</h3>
+        <span class="pill ${type === 'income' ? 'pill-income' : 'pill-expense'}">Total: ${fmt(total, CurrencyUtil.defaultCode)}</span>
+      </div>
+      ${list.length ? list.map(txRowHtml).join('') : emptyState(type === 'income' ? '💰' : '💸', `No ${label.toLowerCase()} found`, 'Try changing filters or add a new one.')}
+    </div>
+  `;
+}
+
+function afterRenderTxList(type) {
+  wireTxRowButtons();
+  document.getElementById('filter-from').addEventListener('change', (e) => { State.filters.from = e.target.value; renderView(); });
+  document.getElementById('filter-to').addEventListener('change', (e) => { State.filters.to = e.target.value; renderView(); });
+  document.getElementById('filter-group').addEventListener('change', (e) => { State.filters.groupId = e.target.value; renderView(); });
+  document.getElementById('clear-filters').addEventListener('click', () => { State.filters = { from: '', to: '', groupId: '', type: '' }; renderView(); });
+  document.getElementById('export-csv').addEventListener('click', () => exportCsv(type));
+  document.getElementById('export-pdf').addEventListener('click', () => exportPdf(type));
+}
+
+function exportCsv(type) {
+  const list = getFilteredTxList(type);
+  const rows = [['Date', 'Description', 'Group', 'Amount', 'Currency']];
+  list.forEach((t) => rows.push([t.date, t.description || '', groupById(t.groupId)?.name || '', t.amount, t.currency]));
+  const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${type}-export.csv`;
+  a.click();
+  showToast('File exported');
+}
+
+function exportPdf(type) {
+  if (typeof jspdf === 'undefined' || typeof jspdf.jsPDF.autoTable === 'undefined') {
+    showToast('PDF library not loaded. Check internet connection.');
+    return;
+  }
+  const { jsPDF } = jspdf;
+  const doc = new jsPDF();
+
+  const password = prompt("Enter a password to protect the PDF, or leave blank for no protection:");
+  if (password) {
+    doc.putEncryption({
+      userPassword: password,
+      ownerPassword: password,
+      userPermissions: ['print', 'copy']
+    });
+  }
+
+  const list = getFilteredTxList(type);
+  const total = totalsInDefault(list)[type === 'income' ? 'income' : 'expense'];
+  const from = State.filters.from;
+  const to = State.filters.to;
+  const group = groupById(State.filters.groupId);
+
+  const title = `${type.charAt(0).toUpperCase() + type.slice(1)} Report`;
+  let subtitle = `Generated on ${formatDateValue(new Date())}`;
+  if (from || to) subtitle += ` | Period: ${from || 'start'} to ${to || 'end'}`;
+  if (group) subtitle += ` | Group: ${group.name}`;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.text(title, 14, 22);
+  doc.setFontSize(11);
+  doc.setTextColor(100);
+  doc.text(subtitle, 14, 30);
+
+  const head = [['Date', 'Description', 'Group', 'Account', 'Amount']];
+  const body = list.map(t => [
+    t.date,
+    t.description || '',
+    groupById(t.groupId)?.name || 'N/A',
+    State.accounts.find(a => a.id === t.accountId)?.name || 'N/A',
+    fmt(t.amount, t.currency)
+  ]);
+
+  doc.autoTable({
+    startY: 38,
+    head: head,
+    body: body,
+    theme: 'striped',
+    headStyles: { fillColor: [76, 122, 90] }, // --accent
+  });
+
+  const finalY = doc.lastAutoTable.finalY || 50;
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Total for Period: ${fmt(total, CurrencyUtil.defaultCode)}`, 14, finalY + 10);
+
+  doc.save(`${type}-report-${Date.now()}.pdf`);
+  showToast('PDF report generated');
+}
+
+/* ================= REPORTS ================= */
+
+/* ================= BUDGETS ================= */
+function renderBudgets() {
+  const expenseGroups = State.groups.filter((g) => g.type === 'expense');
+  const thisMonthKey = monthKey(new Date());
+  const rows = expenseGroups.map((g) => {
+    const budget = State.budgets.find((b) => b.groupId === g.id);
+    const spent = totalsInDefault(State.transactions.filter((t) => t.type === 'expense' && t.groupId === g.id && monthKey(t.date) === thisMonthKey)).expense;
+    const limit = budget ? toDefault(budget.amount, budget.currency) : 0;
+    const pct = limit > 0 ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
+    return `
+      <div class="budget-row" data-group="${g.id}">
+        <div class="top"><span>${g.icon} ${g.name}</span><span>${fmt(spent, CurrencyUtil.defaultCode)} ${limit ? '/ ' + fmt(limit, CurrencyUtil.defaultCode) : ''}</span></div>
+        <div class="bar"><div class="fill ${pct >= 100 ? 'over' : ''}" style="width:${limit ? pct : 0}%; background:${limit ? '' : 'var(--line)'};"></div></div>
+        <div class="sub">${limit ? pct + '% used this month' : 'No limit set'} · <a href="#" class="set-budget-link" data-group="${g.id}">${limit ? 'Edit Limit' : 'Set Limit'}</a></div>
+      </div>`;
+  }).join('');
+  return `<div class="list-card card"><div class="list-head"><h3>Group Limits (This Month)</h3></div>${rows || emptyState('🎯', 'No groups yet', 'Add a group first.')}</div>`;
+}
+
+function afterRenderBudgets() {
+  document.querySelectorAll('.set-budget-link').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      openBudgetModal(link.dataset.group);
+    });
+  });
+}
+
+function openBudgetModal(groupId) {
+  const g = groupById(groupId);
+  const existing = State.budgets.find((b) => b.groupId === groupId);
+  const currencyOptions = State.currencies.map((c) => `<option value="${c.code}" ${existing?.currency === c.code ? 'selected' : (!existing && c.isDefault ? 'selected' : '')}>${c.code}</option>`).join('');
+  openModal(`
+    <h3>${g.icon} Set Limit — ${g.name}</h3>
+    <div class="form-grid">
+      <div class="two-col">
+        <div class="field"><label>Amount</label><input type="number" id="budget-amount" min="0" step="0.01" value="${existing ? existing.amount : ''}" placeholder="0.00"></div>
+        <div class="field"><label>Currency</label><select id="budget-currency">${currencyOptions}</select></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      ${existing ? '<button class="btn btn-danger" id="budget-remove">Remove Limit</button>' : ''}
+      <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="budget-save">Save</button>
+    </div>
+  `);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('budget-remove')?.addEventListener('click', async () => {
+    await DB.delete('budgets', existing.id);
+    State.budgets = State.budgets.filter((b) => b.id !== existing.id);
+    closeModal(); renderView(); showToast('Limit removed');
+  });
+  document.getElementById('budget-save').addEventListener('click', async () => {
+    const amount = parseFloat(document.getElementById('budget-amount').value);
+    const currency = document.getElementById('budget-currency').value;
+    if (!amount || amount <= 0) { showToast('Please enter an amount'); return; }
+    const record = existing ? { ...existing, amount, currency } : { id: uid('bud'), userId: State.user.id, groupId, amount, currency };
+    await DB.put('budgets', record);
+    State.budgets = State.budgets.filter((b) => b.id !== record.id).concat(record);
+    closeModal(); renderView(); showToast('Limit saved');
+  });
+}
+
+/* ================= GROUPS ================= */
+function renderGroups() {
+  const income = State.groups.filter((g) => g.type === 'income');
+  const expense = State.groups.filter((g) => g.type === 'expense');
+  const tile = (g) => {
+    const spend = totalsInDefault(State.transactions.filter((t) => t.groupId === g.id))[g.type === 'income' ? 'income' : 'expense'];
+    return `
+      <div class="group-tile card" data-id="${g.id}">
+        <div class="tile-actions"><button class="btn btn-icon btn-ghost btn-sm edit-group" title="Edit">✏️</button><button class="btn btn-icon btn-ghost btn-sm del-group" title="Delete">🗑️</button></div>
+        <div class="ic" style="background:${g.color}22; color:${g.color};">${g.icon}</div>
+        <div class="name">${escapeHtml(g.name)}</div>
+        <div class="spend mono">${fmt(spend, CurrencyUtil.defaultCode)} total</div>
+      </div>`;
+  };
+  return `
+    <div style="display:flex; justify-content:flex-end; margin-bottom:16px;"><button class="btn btn-primary" id="add-group-btn">+ Add Group</button></div>
+    <h3 style="margin-bottom:12px;">Income Groups</h3>
+    <div class="groups-grid" style="margin-bottom:28px;">${income.map(tile).join('') || emptyState('💼','No income groups','Add one to get started.')}</div>
+    <h3 style="margin-bottom:12px;">Expense Groups</h3>
+    <div class="groups-grid">${expense.map(tile).join('') || emptyState('🛍️','No expense groups','Add one to get started.')}</div>
+  `;
+}
+
+const GROUP_ICONS = ['💼','🎁','➕','🍽️','🚌','🧾','🛍️','💊','📦','🏠','🎓','🎮','✈️','🐾','💇','📱','🧘','🚗','🍕','☕'];
+const GROUP_COLORS = ['#4C7A5A','#8C3B4A','#D6A23C','#3E7C74','#B5732E','#6B4C7A','#C1633A','#4A5C82','#767A3D','#A65A72'];
+
+function afterRenderGroups() {
+  document.getElementById('add-group-btn').addEventListener('click', () => openGroupModal());
+  document.querySelectorAll('.edit-group').forEach((btn) => btn.addEventListener('click', (e) => {
+    const id = e.target.closest('.group-tile').dataset.id;
+    openGroupModal(groupById(id));
+  }));
+  document.querySelectorAll('.del-group').forEach((btn) => btn.addEventListener('click', async (e) => {
+    const id = e.target.closest('.group-tile').dataset.id;
+    const used = State.transactions.some((t) => t.groupId === id);
+    if (used && !confirm('This group has transactions. Delete anyway? Transactions will keep showing "No Group".')) return;
+    if (!used && !confirm('Delete this group?')) return;
+    await DB.delete('groups', id);
+    State.groups = State.groups.filter((g) => g.id !== id);
+    renderView(); showToast('Group deleted');
+  }));
+}
+
+function openGroupModal(existing) {
+  const iconPicker = GROUP_ICONS.map((ic) => `<button type="button" class="icon-opt btn btn-icon ${existing?.icon === ic ? 'active-pick' : ''}" data-ic="${ic}" style="font-size:16px;">${ic}</button>`).join('');
+  const colorPicker = GROUP_COLORS.map((c) => `<button type="button" class="color-opt" data-color="${c}" style="width:26px;height:26px;border-radius:50%;background:${c};border:2px solid ${existing?.color === c ? 'var(--ink)' : 'transparent'};cursor:pointer;"></button>`).join('');
+  openModal(`
+    <h3>${existing ? 'Edit Group' : 'Add Group'}</h3>
+    <div class="form-grid">
+      <div class="field"><label>Name</label><input type="text" id="group-name" value="${existing ? escapeHtml(existing.name) : ''}" placeholder="e.g. Groceries"></div>
+      <div class="field">
+        <label>Type</label>
+        <div class="type-toggle">
+          <button type="button" id="g-type-income" class="${(!existing || existing.type==='income') ? 'active-income' : ''}">Income</button>
+          <button type="button" id="g-type-expense" class="${existing?.type==='expense' ? 'active-expense' : ''}">Expense</button>
+        </div>
+      </div>
+      <div class="field"><label>Icon</label><div style="display:flex; flex-wrap:wrap; gap:6px;">${iconPicker}</div></div>
+      <div class="field"><label>Color</label><div style="display:flex; flex-wrap:wrap; gap:8px;">${colorPicker}</div></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="group-save">Save</button>
+    </div>
+  `);
+  let picked = { type: existing?.type || 'income', icon: existing?.icon || GROUP_ICONS[0], color: existing?.color || GROUP_COLORS[0] };
+  document.getElementById('g-type-income').addEventListener('click', () => { picked.type='income'; document.getElementById('g-type-income').className='active-income'; document.getElementById('g-type-expense').className=''; });
+  document.getElementById('g-type-expense').addEventListener('click', () => { picked.type='expense'; document.getElementById('g-type-expense').className='active-expense'; document.getElementById('g-type-income').className=''; });
+  document.querySelectorAll('.icon-opt').forEach((b) => b.addEventListener('click', () => { picked.icon = b.dataset.ic; document.querySelectorAll('.icon-opt').forEach(x=>x.classList.remove('active-pick')); b.classList.add('active-pick'); }));
+  document.querySelectorAll('.color-opt').forEach((b) => b.addEventListener('click', () => { picked.color = b.dataset.color; document.querySelectorAll('.color-opt').forEach(x=>x.style.border='2px solid transparent'); b.style.border='2px solid var(--ink)'; }));
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('group-save').addEventListener('click', async () => {
+    const name = document.getElementById('group-name').value.trim();
+    if (!name) { showToast('Please enter a name'); return; }
+    const record = existing ? { ...existing, name, ...picked } : { id: uid('grp'), userId: State.user.id, name, ...picked };
+    await DB.put('groups', record);
+    State.groups = State.groups.filter((g) => g.id !== record.id).concat(record);
+    closeModal(); renderView(); showToast('Group saved');
+  });
+}
+
+/* ================= SETTINGS ================= */
+function renderSettings() {
+  const curRows = State.currencies.map((c) => `
+    <div class="cur-row" data-id="${c.id}">
+      <strong>${c.symbol}</strong>
+      <span>${c.code} — ${escapeHtml(c.name)}</span>
+      <input type="number" class="cur-rate" step="0.0001" value="${c.rate}" ${c.isDefault ? 'disabled' : ''}>
+      <label style="display:flex; align-items:center; gap:6px; font-size:12px;"><input type="radio" name="default-cur" class="cur-default" ${c.isDefault ? 'checked' : ''}> Default</label>
+      <button class="btn btn-icon btn-ghost btn-sm cur-del" ${c.isDefault ? 'disabled style="opacity:.3;"' : ''}>🗑️</button>
+    </div>`).join('');
+
+  const settings = State.user?.settings || normalizeUserSettings();
+  const dateOptions = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'].map((option) => `<option value="${option}" ${settings.dateFormat === option ? 'selected' : ''}>${option}</option>`).join('');
+  const currencyOptions = State.currencies.map((c) => `<option value="${c.code}" ${settings.defaultCurrency === c.code ? 'selected' : ''}>${c.code} — ${escapeHtml(c.name)}</option>`).join('');
+
+  return `
+    <div class="settings-section card">
+      <h3>Application</h3>
+      <div class="field" style="margin-bottom:12px;"><label>Application Version</label><input type="text" value="${escapeHtml(settings.appVersion || '1.0.0')}"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Build Number</label><input type="text" value="${escapeHtml(settings.buildNumber || '1')}"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Release Date</label><input type="text" value="${escapeHtml(settings.releaseDate || '2026-07-07')}"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Date Format</label><select id="settings-date-format">${dateOptions}</select></div>
+      <div class="field" style="margin-bottom:12px;"><label>Default Currency</label><select id="settings-default-currency">${currencyOptions}</select></div>
+      <div class="field" style="margin-bottom:12px;"><label>Language</label><input type="text" value="${escapeHtml(settings.language || 'English')}"></div>
+      <div class="field"><label>Theme</label><select id="settings-theme-select"><option value="light" ${State.theme === 'light' ? 'selected' : ''}>Light</option><option value="dark" ${State.theme === 'dark' ? 'selected' : ''}>Dark</option></select></div>
+    </div>
+
+    <div class="settings-section card">
+      <h3>Look</h3>
+      <div class="theme-toggle">
+        <button class="switch ${State.theme === 'dark' ? 'on' : ''}" id="settings-theme-switch"></button>
+        <span>Dark Mode</span>
+      </div>
+    </div>
+
+    <div class="settings-section card">
+      <h3>Money Types</h3>
+      <div class="cur-row head"><span></span><span>Name</span><span>Rate</span><span>Default</span><span></span></div>
+      ${curRows}
+      <div style="margin-top:14px;"><button class="btn btn-sm" id="add-currency-btn">+ Add Money Type</button></div>
+      <p style="font-size:12px; color:var(--muted); margin-top:10px;">Rate = how many units of this money type equal 1 unit of your default money. The default money type always has a rate of 1.</p>
+    </div>
+
+    <div class="settings-section card">
+      <h3>Application Update</h3>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:10px;">Current Version: ${escapeHtml(settings.appVersion || '1.0.0')} · Build ${escapeHtml(settings.buildNumber || '1')}</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;"><button class="btn btn-sm">Check for Updates</button><button class="btn btn-sm">Download Update</button><button class="btn btn-sm">Install Update</button><button class="btn btn-sm">Restart Application</button></div>
+      <div class="field" style="margin-bottom:8px;"><label>Enable Automatic Updates</label><input type="checkbox" ${settings.enableAutomaticUpdates ? 'checked' : ''}></div>
+      <div class="field" style="margin-bottom:8px;"><label>Download Updates Automatically</label><input type="checkbox" ${settings.downloadUpdatesAutomatically ? 'checked' : ''}></div>
+      <div class="field" style="margin-bottom:8px;"><label>Notify Before Installing</label><input type="checkbox" ${settings.notifyBeforeInstalling ? 'checked' : ''}></div>
+      <div class="field"><label>Install Security Updates Automatically</label><input type="checkbox" ${settings.installSecurityUpdatesAutomatically ? 'checked' : ''}></div>
+    </div>
+
+    <div class="settings-section card">
+      <h3>Account</h3>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:12px;">Signed in as <strong>${escapeHtml(State.user.username)}</strong></p>
+      <button class="btn btn-sm" id="change-password-btn">Change Password</button>
+    </div>
+  `;
+}
+
+function afterRenderSettings() {
+  document.getElementById('settings-theme-switch').addEventListener('click', toggleTheme);
+  document.getElementById('settings-theme-select')?.addEventListener('change', async (e) => {
+    State.theme = e.target.value;
+    applyTheme(State.theme);
+    State.user.settings = normalizeUserSettings(State.user.settings);
+    State.user.settings.theme = State.theme;
+    await Auth.saveUser(State.user);
+    renderView();
+  });
+  document.getElementById('settings-date-format')?.addEventListener('change', async (e) => {
+    State.user.settings = normalizeUserSettings(State.user.settings);
+    State.user.settings.dateFormat = e.target.value;
+    State.dateFormat = e.target.value;
+    await Auth.saveUser(State.user);
+    renderView();
+  });
+  document.getElementById('settings-default-currency')?.addEventListener('change', async (e) => {
+    State.user.settings = normalizeUserSettings(State.user.settings);
+    State.user.settings.defaultCurrency = e.target.value;
+    await Auth.saveUser(State.user);
+    CurrencyUtil.setAll(State.currencies);
+    renderView();
+  });
+  document.getElementById('add-currency-btn').addEventListener('click', openCurrencyModal);
+  document.getElementById('change-password-btn').addEventListener('click', openChangePasswordModal);
+
+  document.querySelectorAll('.cur-row[data-id]').forEach((row) => {
+    const id = row.dataset.id;
+    row.querySelector('.cur-rate').addEventListener('change', async (e) => {
+      const c = State.currencies.find((x) => x.id === id);
+      c.rate = parseFloat(e.target.value) || 1;
+      await DB.put('currencies', c);
+      showToast('Rate updated');
+    });
+    row.querySelector('.cur-default').addEventListener('change', async () => {
+      for (const c of State.currencies) {
+        c.isDefault = c.id === id;
+        if (c.isDefault) c.rate = 1;
+        await DB.put('currencies', c);
+      }
+      CurrencyUtil.setAll(State.currencies);
+      State.user.settings = normalizeUserSettings(State.user.settings);
+      State.user.settings.defaultCurrency = State.currencies.find((c) => c.isDefault)?.code || State.user.settings.defaultCurrency;
+      await Auth.saveUser(State.user);
+      renderView(); showToast('Default money type updated');
+    });
+    row.querySelector('.cur-del').addEventListener('click', async () => {
+      const used = State.transactions.some((t) => t.currency === State.currencies.find(c=>c.id===id).code);
+      if (used && !confirm('Transactions use this money type. Delete anyway?')) return;
+      await DB.delete('currencies', id);
+      State.currencies = State.currencies.filter((c) => c.id !== id);
+      CurrencyUtil.setAll(State.currencies);
+      renderView(); showToast('Money type removed');
+    });
+  });
+}
+
+function openCurrencyModal() {
+  openModal(`
+    <h3>Add Money Type</h3>
+    <div class="form-grid">
+      <div class="two-col">
+        <div class="field"><label>Code</label><input type="text" id="cur-code" maxlength="6" placeholder="e.g. GBP" style="text-transform:uppercase;"></div>
+        <div class="field"><label>Symbol</label><input type="text" id="cur-symbol" maxlength="3" placeholder="£"></div>
+      </div>
+      <div class="field"><label>Name</label><input type="text" id="cur-name" placeholder="e.g. British Pound"></div>
+      <div class="field"><label>Rate (units per 1 default)</label><input type="number" id="cur-rate" step="0.0001" value="1"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="cur-save">Save</button>
+    </div>
+  `);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('cur-save').addEventListener('click', async () => {
+    const code = document.getElementById('cur-code').value.trim().toUpperCase();
+    const symbol = document.getElementById('cur-symbol').value.trim() || code;
+    const name = document.getElementById('cur-name').value.trim();
+    const rate = parseFloat(document.getElementById('cur-rate').value) || 1;
+    if (!code || !name) { showToast('Please fill in code and name'); return; }
+    if (State.currencies.some((c) => c.code === code)) { showToast('That code already exists'); return; }
+    const record = { id: uid('cur'), userId: State.user.id, code, symbol, name, rate, isDefault: State.currencies.length === 0 };
+    await DB.put('currencies', record);
+    State.currencies.push(record);
+    if (State.currencies.filter((c) => c.isDefault).length === 0) {
+      record.isDefault = true;
+      record.rate = 1;
+    }
+    CurrencyUtil.setAll(State.currencies);
+    State.user.settings = normalizeUserSettings(State.user.settings);
+    State.user.settings.defaultCurrency = State.currencies.find((c) => c.isDefault)?.code || State.user.settings.defaultCurrency;
+    await Auth.saveUser(State.user);
+    closeModal(); renderView(); showToast('Money type added');
+  });
+}
+
+function openChangePasswordModal() {
+  openModal(`
+    <h3>Change Password</h3>
+    <div class="form-grid">
+      <div class="field"><label>Current Password</label><input type="password" id="cp-current"></div>
+      <div class="field"><label>New Password</label><input type="password" id="cp-new"></div>
+      <div class="field"><label>Confirm New Password</label><input type="password" id="cp-confirm"></div>
+    </div>
+    <div class="auth-error" id="cp-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="cp-save">Save</button>
+    </div>
+  `);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('cp-save').addEventListener('click', async () => {
+    const current = document.getElementById('cp-current').value;
+    const next = document.getElementById('cp-new').value;
+    const confirmVal = document.getElementById('cp-confirm').value;
+    const hash = await sha256Hex(State.user.salt + current);
+    if (hash !== State.user.passwordHash) { document.getElementById('cp-error').textContent = 'Current password is wrong.'; return; }
+    if (!next || next !== confirmVal) { document.getElementById('cp-error').textContent = 'New passwords do not match.'; return; }
+    State.user.passwordHash = await sha256Hex(State.user.salt + next);
+    await Auth.saveUser(State.user);
+    closeModal(); showToast('Password changed');
+  });
+}
+
+const REMINDER_TYPES = [
+  { id: 'custom', name: 'Custom Reminder' },
+  { id: 'bank_transfer', name: 'Bank Transfer', isTransfer: true },
+  { id: 'rd_deposit', name: 'RD Deposit' },
+  { id: 'fd_deposit', name: 'Fixed Deposit' },
+  { id: 'cc_payment', name: 'Credit Card Payment' },
+  { id: 'loan_payment', name: 'Loan Payment' },
+  { id: 'cash_deposit', name: 'Cash Deposit' },
+  { id: 'cash_withdrawal', name: 'Cash Withdrawal' },
+];
+
+function openReminderModal(existing) {
+  const tx = existing?.transactionDetails || {};
+  const accountOptions = State.accounts.map(a => `<option value="${a.id}" ${tx.accountId === a.id ? 'selected' : ''}>${a.name}</option>`).join('');
+  const groupOptions = State.groups.map(g => `<option value="${g.id}" ${tx.groupId === g.id ? 'selected' : ''}>${g.icon} ${g.name}</option>`).join('');
+  const currencyOptions = State.currencies.map(c => `<option value="${c.code}" ${((tx.currency) || CurrencyUtil.defaultCode) === c.code ? 'selected' : ''}>${c.code}</option>`).join('');
+  const reminderTypeOptions = REMINDER_TYPES.map(rt => `<option value="${rt.id}" ${existing?.reminderType === rt.id ? 'selected' : ''}>${rt.name}</option>`).join('');
+  const repeatOptions = ['none', 'daily', 'weekly', 'monthly', 'yearly'].map(o => `<option value="${o}" ${existing?.repeat === o ? 'selected' : ''}>${o.charAt(0).toUpperCase() + o.slice(1)}</option>`).join('');
+
+  openModal(`
+    <h3>${existing ? 'Edit' : 'Add'} Reminder</h3>
+    <div class="form-grid">
+      <div class="field"><label>Reminder Title</label><input type="text" id="rem-title" value="${existing?.title || ''}" placeholder="e.g. Monthly Rent"></div>
+      <div class="field"><label>Reminder Type</label><select id="rem-type-select">${reminderTypeOptions}</select></div>
+      <h4>Schedule</h4>
+      <div class="two-col" style="align-items:end;">
+        <div class="field"><label>First Due Date</label><input type="date" id="rem-start-date" value="${existing?.nextDueDate || new Date().toISOString().slice(0,10)}"></div>
+        <div class="field"><label>Time (optional)</label><input type="time" id="rem-time" value="${existing?.time || ''}"></div>
+      </div>
+      <div class="field" id="rem-repeat-section"><label>Repeat</label><select id="rem-repeat">${repeatOptions}</select></div>
+      <div id="reminder-details-form" class="form-grid" style="gap: 14px; margin-top: 14px;"></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="modal-cancel">Cancel</button><button class="btn btn-primary" id="rem-save">Save Reminder</button></div>
+  `);
+
+  const renderReminderDetails = (typeId, details = {}) => {
+    const formContainer = document.getElementById('reminder-details-form');
+    const reminderType = REMINDER_TYPES.find(rt => rt.id === typeId);
+    if (reminderType?.isTransfer) {
+      formContainer.innerHTML = `<h4>Transfer Details</h4>
+        <div class="two-col"><div class="field"><label>From Account</label><select id="rem-from-account">${accountOptions.replace(`value="${details.fromAccountId}"`, `value="${details.fromAccountId}" selected`)}</select></div><div class="field"><label>To Account</label><select id="rem-to-account">${accountOptions.replace(`value="${details.toAccountId}"`, `value="${details.toAccountId}" selected`)}</select></div></div>
+        <div class="two-col"><div class="field"><label>Amount Sent</label><input type="number" id="rem-from-amount" value="${details.fromAmount || ''}" placeholder="0.00"></div><div class="field"><label>Currency</label><select id="rem-from-currency">${currencyOptions.replace(`value="${details.fromCurrency}"`, `value="${details.fromCurrency}" selected`)}</select></div></div>
+        <div class="two-col"><div class="field"><label>Amount Received</label><input type="number" id="rem-to-amount" value="${details.toAmount || ''}" placeholder="0.00"></div><div class="field"><label>Currency</label><select id="rem-to-currency">${currencyOptions.replace(`value="${details.toCurrency}"`, `value="${details.toCurrency}" selected`)}</select></div></div>
+        <div class="field"><label>Description</label><input type="text" id="rem-desc" value="${details.description || ''}" placeholder="Auto-generated transaction"></div>`;
+    } else {
+      formContainer.innerHTML = `<h4>Transaction Details</h4>
+        <div class="field"><label>Type</label><div class="type-toggle"><button id="rem-tx-type-income" class="${details.type === 'income' ? 'active-income' : ''}">Income</button><button id="rem-tx-type-expense" class="${!details.type || details.type === 'expense' ? 'active-expense' : ''}">Expense</button></div></div>
+        <div class="two-col"><div class="field"><label>Amount</label><input type="number" id="rem-amount" value="${details.amount || ''}" placeholder="0.00"></div><div class="field"><label>Currency</label><select id="rem-currency">${currencyOptions.replace(`value="${details.currency || CurrencyUtil.defaultCode}"`, `value="${details.currency || CurrencyUtil.defaultCode}" selected`)}</select></div></div>
+        <div class="field"><label>Account</label><select id="rem-account">${accountOptions.replace(`value="${details.accountId}"`, `value="${details.accountId}" selected`)}</select></div>
+        <div class="field"><label>Group</label><select id="rem-group">${groupOptions.replace(`value="${details.groupId}"`, `value="${details.groupId}" selected`)}</select></div>
+        <div class="field"><label>Description</label><input type="text" id="rem-desc" value="${details.description || ''}" placeholder="Auto-generated transaction"></div>`;
+
+      let currentType = details.type || 'expense';
+      const incomeBtn = document.getElementById('rem-tx-type-income');
+      const expenseBtn = document.getElementById('rem-tx-type-expense');
+      incomeBtn.addEventListener('click', () => { currentType = 'income'; incomeBtn.className = 'active-income'; expenseBtn.className = ''; });
+      expenseBtn.addEventListener('click', () => { currentType = 'expense'; expenseBtn.className = 'active-expense'; incomeBtn.className = ''; });
+    }
+  };
+
+  const typeSelect = document.getElementById('rem-type-select');
+  typeSelect.addEventListener('change', () => renderReminderDetails(typeSelect.value, {}));
+  renderReminderDetails(existing?.reminderType || typeSelect.value, tx);
+
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('rem-save').addEventListener('click', async () => {
+    const repeatType = document.getElementById('rem-repeat').value;
+    const freqUnitMap = { 'daily': 'days', 'weekly': 'weeks', 'monthly': 'months', 'yearly': 'years' };
+
+    const record = {
+      id: existing?.id || uid('rem'),
+      userId: State.user.id,
+      title: document.getElementById('rem-title').value,
+      reminderType: document.getElementById('rem-type-select').value,
+      nextDueDate: document.getElementById('rem-start-date').value,
+      time: document.getElementById('rem-time').value,
+      repeat: repeatType,
+      frequencyValue: 1,
+      frequencyUnit: repeatType !== 'none' ? freqUnitMap[repeatType] : 'days',
+      status: existing?.status || 'active',
+      transactionDetails: {}
+    };
+
+    const reminderType = REMINDER_TYPES.find(rt => rt.id === record.reminderType);
+    if (reminderType?.isTransfer) {
+      record.transactionDetails = {
+        isTransfer: true,
+        fromAccountId: document.getElementById('rem-from-account').value,
+        toAccountId: document.getElementById('rem-to-account').value,
+        fromAmount: parseFloat(document.getElementById('rem-from-amount').value),
+        fromCurrency: document.getElementById('rem-from-currency').value,
+        toAmount: parseFloat(document.getElementById('rem-to-amount').value),
+        toCurrency: document.getElementById('rem-to-currency').value,
+        description: document.getElementById('rem-desc').value,
+      };
+      if (!record.title || !record.nextDueDate || !record.transactionDetails.fromAmount || !record.transactionDetails.toAmount) { showToast('Please fill in title, due date, and amounts.'); return; }
+    } else {
+      record.transactionDetails = {
+        type: document.querySelector('#reminder-details-form .type-toggle .active-income') ? 'income' : 'expense',
+        amount: parseFloat(document.getElementById('rem-amount').value),
+        currency: document.getElementById('rem-currency').value,
+        accountId: document.getElementById('rem-account').value,
+        groupId: document.getElementById('rem-group').value,
+        description: document.getElementById('rem-desc').value,
+      };
+      if (!record.title || !record.nextDueDate || !record.transactionDetails.amount) { showToast('Please fill in title, due date, and amount.'); return; }
+    }
+
+    await DB.put('reminders', record);
+    State.reminders = State.reminders.filter((r) => r.id !== record.id).concat(record);
+    closeModal(); renderView(); showToast('Reminder saved');
+  });
+}
+
+/* ================= CURRENCY HISTORY ================= */
+function renderCurrencyHistory() {
+  const list = getFilteredCurrencyHistory();
+  const rows = list.map(h => `
+    <div class="tx-row" data-id="${h.id}">
+      <div class="ic" style="background:var(--info-soft); color:var(--info);">💱</div>
+      <div class="info">
+        <div class="desc">${escapeHtml(h.moduleName || 'Currency History')} · ${escapeHtml(h.transactionNumber || '')}</div>
+        <div class="meta">${formatDateValue(h.date)} · ${h.originalCurrency} → ${h.baseCurrency} · Rate ${Number(h.exchangeRate || 1).toFixed(4)} · Status ${escapeHtml(h.status || 'Completed')}</div>
+      </div>
+      <div class="row-actions">
+        <button class="btn btn-icon btn-ghost btn-del-chist" title="Delete">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="filter-bar card" style="padding:14px 16px;">
+      <div class="field"><label>Search</label><input type="text" id="ch-search" value="${State.search}"></div>
+    </div>
+    <div class="list-card card">
+      <div class="list-head"><h3>Multi-Currency Transfer History</h3></div>
+      ${rows || emptyState('💱', 'No currency exchange history', 'Transfers between different currencies will be logged here.')}
+    </div>
+  `;
+}
+
+function afterRenderCurrencyHistory() {
+  document.getElementById('ch-search')?.addEventListener('input', (e) => {
+    State.search = (e.target.value || '').trim().toLowerCase();
+    renderView();
+  });
+  document.querySelectorAll('.btn-del-chist').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      const id = e.target.closest('.tx-row').dataset.id;
+      if (!confirm('Are you sure you want to delete this history entry? This cannot be undone.')) return;
+      
+      // Find the associated transfer transactions
+      const historyEntry = State.currencyHistory.find(h => h.id === id);
+      if (historyEntry && historyEntry.transferId) {
+        const hasTxs = State.transactions.some(t => t.transferId === historyEntry.transferId);
+        if (hasTxs) {
+          if (!confirm('This will also delete the associated transfer transactions. Continue?')) {
+            return;
+          }
+          // Delete associated transactions
+          const txsToDelete = State.transactions.filter(t => t.transferId === historyEntry.transferId);
+          for (const tx of txsToDelete) {
+            await DB.delete('transactions', tx.id);
+          }
+          State.transactions = State.transactions.filter(t => t.transferId !== historyEntry.transferId);
+        }
+      }
+
+      await DB.delete('currency_history', id);
+      State.currencyHistory = State.currencyHistory.filter(h => h.id !== id);
+      renderView();
+      showToast('History entry and related transfers deleted.');
+    });
+  });
+}
+
+/* ================= Transaction Modal ================= */
+function openTxModal(existing) {
+  State.editingTxId = existing ? existing.id : null;
+  State.pendingAttachments = existing ? [...(existing.attachments || [])] : [];
+  const type = existing ? existing.type : 'expense';
+  renderTxModalBody(type, existing);
+}
+
+function renderTxModalBody(type, existing) {
+  const groupsOfType = State.groups.filter((g) => g.type === type);
+  const accountOptions = State.accounts.map(a => `<option value="${a.id}" ${existing?.accountId === a.id ? 'selected' : ''}>${a.name} (${a.type})</option>`).join('');
+  const defaultCode = existing?.baseCurrency || existing?.currency || getPreferredCurrencyCode();
+  const currencyOptions = State.currencies.map((c) => `<option value="${c.code}" ${((existing?.currency)||defaultCode) === c.code ? 'selected' : ''}>${c.code}</option>`).join('');
+  const dateVal = existing ? existing.date : new Date().toISOString().slice(0, 10);
+  const showMultiCurrency = (existing?.currency || getPreferredCurrencyCode()) !== (existing?.baseCurrency || getPreferredCurrencyCode());
+
+  openModal(`
+    <h3>${existing ? 'Edit Transaction' : 'Add Transaction'}</h3>
+    <div class="type-toggle" style="margin-bottom:16px;">
+      <button type="button" id="tx-type-income" class="${type === 'income' ? 'active-income' : ''}">Income</button>
+      <button type="button" id="tx-type-expense" class="${type === 'expense' ? 'active-expense' : ''}">Expense</button>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>Account</label><select id="tx-account">${accountOptions.length ? accountOptions : '<option disabled>Please add an account first</option>'}</select></div>
+      <div class="two-col">
+        <div class="field"><label>Amount</label><input type="number" id="tx-amount" min="0" step="0.01" value="${existing ? existing.amount : ''}" placeholder="0.00"></div>
+        <div class="field"><label>Money Type</label><select id="tx-currency">${currencyOptions}</select></div>
+      </div>
+      <div id="tx-multi-currency" class="two-col ${showMultiCurrency ? '' : 'hidden'}">
+        <div class="field"><label>Exchange Rate</label><input type="number" id="tx-exchange-rate" min="0" step="0.0001" value="${existing?.exchangeRate || 1}"></div>
+        <div class="field"><label>Converted Amount</label><input type="number" id="tx-converted-amount" min="0" step="0.01" value="${existing?.convertedAmount || existing?.baseAmount || ''}"></div>
+      </div>
+      <div id="tx-base-currency" class="field ${showMultiCurrency ? '' : 'hidden'}"><label>Base Currency Amount</label><input type="number" id="tx-base-amount" min="0" step="0.01" value="${existing?.baseAmount || ''}"></div>
+      <div class="field"><label>What was it for</label><input type="text" id="tx-desc" value="${existing ? escapeHtml(existing.description || '') : ''}" placeholder="e.g. Coffee with friend"></div>
+      <div class="two-col">
+        <div class="field"><label>Group</label><select id="tx-group">${groupsOfType.map((g) => `<option value="${g.id}" ${existing?.groupId === g.id ? 'selected' : ''}>${g.icon} ${g.name}</option>`).join('')}</select></div>
+        <div class="field"><label>Date</label><input type="date" id="tx-date" value="${dateVal}"></div>
+      </div>
+      <div class="field">
+        <label>Attachments (bill, receipt, image, PDF, DOCX, XLSX, ZIP)</label>
+        <div class="attach-drop" id="attach-drop">Tap to add a file</div>
+        <input type="file" id="tx-file" class="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,.zip,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip">
+        <div class="attach-list" id="attach-list"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="tx-save">Save</button>
+    </div>
+  `);
+
+  let currentType = type;
+  const currencySelect = document.getElementById('tx-currency');
+  const exchangeWrap = document.getElementById('tx-multi-currency');
+  const baseWrap = document.getElementById('tx-base-currency');
+  const updateMultiCurrencyVisibility = () => {
+    const selectedCurrency = currencySelect.value;
+    const defaultCode = getPreferredCurrencyCode();
+    const isMulti = selectedCurrency && selectedCurrency !== defaultCode;
+    exchangeWrap.classList.toggle('hidden', !isMulti);
+    baseWrap.classList.toggle('hidden', !isMulti);
+  };
+  currencySelect.addEventListener('change', updateMultiCurrencyVisibility);
+  updateMultiCurrencyVisibility();
+  const switchType = (t) => {
+    currentType = t;
+    document.getElementById('tx-type-income').className = t === 'income' ? 'active-income' : '';
+    document.getElementById('tx-type-expense').className = t === 'expense' ? 'active-expense' : '';
+    const groupSel = document.getElementById('tx-group');
+    const groups = State.groups.filter((g) => g.type === t);
+    groupSel.innerHTML = groups.map((g) => `<option value="${g.id}">${g.icon} ${g.name}</option>`).join('');
+  };
+  document.getElementById('tx-type-income').addEventListener('click', () => switchType('income'));
+  document.getElementById('tx-type-expense').addEventListener('click', () => switchType('expense'));
+
+  renderAttachList();
+  document.getElementById('attach-drop').addEventListener('click', () => document.getElementById('tx-file').click());
+  document.getElementById('tx-file').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    for (const file of files) {
+      if (file.size > 8 * 1024 * 1024) { showToast(`${file.name} is too big (max 8MB)`); continue; }
+      const dataUrl = await fileToDataUrl(file);
+      State.pendingAttachments.push({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl, uploadedAt: new Date().toISOString(), uploadedBy: State.user?.username || 'System' });
+    }
+    renderAttachList();
+    e.target.value = '';
+  });
+
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('tx-save').addEventListener('click', async () => {
+    const amount = parseFloat(document.getElementById('tx-amount').value);
+    const accountId = document.getElementById('tx-account').value;
+    const currency = document.getElementById('tx-currency').value;
+    const description = document.getElementById('tx-desc').value.trim();
+    const groupId = document.getElementById('tx-group').value;
+    const date = document.getElementById('tx-date').value;
+    const exchangeRate = parseFloat(document.getElementById('tx-exchange-rate')?.value || '1');
+    const convertedAmount = parseFloat(document.getElementById('tx-converted-amount')?.value || '0');
+    const baseAmount = parseFloat(document.getElementById('tx-base-amount')?.value || '0');
+    const baseCurrency = getPreferredCurrencyCode();
+    if (!amount || amount <= 0) { showToast('Please enter an amount'); return; }
+    if (!groupId) { showToast('Please choose a group'); return; }
+    if (!accountId) { showToast('Please choose an account'); return; }
+    if (!date) { showToast('Please choose a date'); return; }
+
+    const record = {
+      id: State.editingTxId || uid('tx'),
+      userId: State.user.id,
+      type: currentType,
+      amount, currency, description, groupId, date,
+      accountId, attachments: State.pendingAttachments,
+      exchangeRate: Number.isFinite(exchangeRate) && exchangeRate > 0 ? exchangeRate : 1,
+      convertedAmount: Number.isFinite(convertedAmount) && convertedAmount > 0 ? convertedAmount : amount,
+      baseAmount: Number.isFinite(baseAmount) && baseAmount > 0 ? baseAmount : amount,
+      baseCurrency,
+      originalAmount: amount,
+      originalCurrency: currency,
+      createdAt: existing ? existing.createdAt : Date.now(),
+    };
+    await DB.put('transactions', record);
+    State.transactions = State.transactions.filter((t) => t.id !== record.id).concat(record);
+    if (currency !== baseCurrency) {
+      const historyEntry = buildCurrencyHistoryEntry({ transactionId: record.id, moduleName: 'Transaction', date, transactionNumber: record.id, originalCurrency: currency, baseCurrency, exchangeRate: record.exchangeRate, originalAmount: amount, convertedAmount: record.convertedAmount || amount, status: 'Completed' });
+      await saveCurrencyHistoryEntry(historyEntry);
+    }
+    closeModal();
+    renderView();
+    showToast(State.editingTxId ? 'Transaction updated' : 'Transaction added');
+  });
+}
+
+function renderAttachList() {
+  const box = document.getElementById('attach-list');
+  if (!box) return;
+  box.innerHTML = State.pendingAttachments.length ? State.pendingAttachments.map((a, i) => buildAttachmentActionHtml(a, i, 'attachments')).join('') : '<div class="empty-state" style="padding:0;"><p>No attachments yet.</p></div>';
+  box.querySelectorAll('[data-action]').forEach((btn) => {
+    btn.addEventListener('click', async (event) => {
+      event.preventDefault();
+      const action = btn.dataset.action;
+      const index = Number(btn.dataset.index || 0);
+      await handleAttachmentAction(action, State.pendingAttachments, index, { id: State.editingTxId || null }, 'attachments');
+      renderAttachList();
+    });
+  });
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ================= Generic Modal ================= */
+function openModal(innerHtml) {
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-backdrop" id="modal-backdrop"><div class="modal card">${innerHtml}</div></div>`;
+  document.getElementById('modal-backdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'modal-backdrop') closeModal();
+  });
+}
+function closeModal() {
+  document.getElementById('modal-root').innerHTML = '';
+  State.editingTxId = null;
+  State.viewingAccountId = null;
+  State.pendingAttachments = [];
+}
+
+</script>
+</body>
+</html>
