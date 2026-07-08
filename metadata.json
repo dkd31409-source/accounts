@@ -1,0 +1,6 @@
+{
+  "name": "Money",
+  "description": "A beautiful tactile ledger and coin jar app for simple finance, budgeting, and transaction tracking.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
