@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Base custom variables matching the premium Cozy tactile design */
+:root {
+  --bg: #EEF0E6;
+  --surface: #FBFAF3;
+  --surface-glass: rgba(251, 250, 243, 0.76);
+  --ink: #202B22;
+  --muted: #6C7566;
+  --line: #DBDACB;
+  --accent: #4C7A5A;
+  --accent-ink: #223A2A;
+  --accent-soft: #DEE9DD;
+  --coral: #8C3B4A;
+  --coral-soft: #F3DFDF;
+  --gold: #D6A23C;
+  --gold-soft: #F6E7C8;
+  --radius: 24px;
+}
+
+/* Custom dark mode implementation in pure variables */
+.dark-theme {
+  --bg: #141B15;
+  --surface: #1C251D;
+  --surface-glass: rgba(28, 37, 29, 0.78);
+  --ink: #EAF0E6;
+  --muted: #96A38F;
+  --line: #2C372C;
+  --accent: #74AE87;
+  --accent-ink: #E7F4EA;
+  --accent-soft: #223B2B;
+  --coral: #D98A93;
+  --coral-soft: #3B2224;
+  --gold: #E8BE6E;
+  --gold-soft: #3A2F17;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Quick custom theme classes overrides to plug custom variables seamlessly */
+.bg-bg { background-color: var(--bg); }
+.bg-surface { background-color: var(--surface); }
+.bg-surface-glass { background-color: var(--surface-glass); }
+.text-ink { color: var(--ink); }
+.text-muted { color: var(--muted); }
+.text-coral { color: var(--coral); }
+.border-line { border-color: var(--line); }
+
+/* Animation triggers */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+main {
+  animation: fadeIn 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom printing styles for invoices & ledgers */
+@media print {
+  aside, nav, header, button {
+    display: none !important;
+  }
+  body, main {
+    background: white !important;
+    color: black !important;
+  }
+}
